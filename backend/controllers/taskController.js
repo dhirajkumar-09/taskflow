@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const Board = require('../models/Board');
+const { validationResult } = require('express-validator');
 
 // Helper function: check if the board belongs to the logged-in user
 const verifyBoardOwnership = async (boardId, userId) => {
@@ -12,11 +13,12 @@ const verifyBoardOwnership = async (boardId, userId) => {
 // Create a new task
 const createTask = async (req, res) => {
   try {
-    const { title, description, status, boardId } = req.body;
-
-    if (!title || !boardId) {
-      return res.status(400).json({ message: 'Title and boardId are required' });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
+
+    const { title, description, status, boardId } = req.body;
 
     const board = await verifyBoardOwnership(boardId, req.userId);
     if (board === null) {
@@ -68,6 +70,11 @@ const getTasks = async (req, res) => {
 // Update a task (including status change for drag-and-drop)
 const updateTask = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const task = await Task.findById(req.params.id);
 
     if (!task) {
