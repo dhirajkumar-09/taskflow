@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const boardRoutes = require('./routes/boardRoutes');
 const protect = require('./middleware/authMiddleware');
 
 const app = express();
@@ -17,6 +18,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/boards', boardRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TaskFlow server is running 🚀' });
