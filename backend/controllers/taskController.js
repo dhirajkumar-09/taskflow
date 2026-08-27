@@ -2,7 +2,6 @@ const Task = require('../models/Task');
 const Board = require('../models/Board');
 const { validationResult } = require('express-validator');
 
-// Helper function: check if the board belongs to the logged-in user
 const verifyBoardOwnership = async (boardId, userId) => {
   const board = await Board.findById(boardId);
   if (!board) return null;
@@ -37,6 +36,10 @@ const createTask = async (req, res) => {
 
     await newTask.save();
 
+    // Notify everyone in this board's room that a new task was created
+    const io = req.app.get('io');
+    io.to(boardId).emit('taskCreated', newTask);
+
     res.status(201).json({ message: 'Task created successfully', task: newTask });
 
   } catch (error) {
@@ -67,7 +70,7 @@ const getTasks = async (req, res) => {
   }
 };
 
-// Update a task (including status change for drag-and-drop)
+// Update a task
 const updateTask = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -94,6 +97,10 @@ const updateTask = async (req, res) => {
 
     await task.save();
 
+    // Notify everyone in this board's room that a task was updated
+    const io = req.app.get('io');
+    io.to(task.board.toString()).emit('taskUpdated', task);
+
     res.status(200).json({ message: 'Task updated successfully', task });
 
   } catch (error) {
@@ -116,7 +123,14 @@ const deleteTask = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this task' });
     }
 
+    const boardId = task.board.toString();
+    const taskId = task._id.toString();
+
     await task.deleteOne();
+
+    // Notify everyone in this board's room that a task was deleted
+    const io = req.app.get('io');
+    io.to(boardId).emit('taskDeleted', { taskId });
 
     res.status(200).json({ message: 'Task deleted successfully' });
 

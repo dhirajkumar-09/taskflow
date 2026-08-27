@@ -13,15 +13,16 @@ const protect = require('./middleware/authMiddleware');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Create a raw HTTP server using our Express app
 const server = http.createServer(app);
 
-// Attach Socket.io to that server
 const io = new Server(server, {
   cors: {
     origin: '*'
   }
 });
+
+// Make io accessible inside our route controllers via req.app.get('io')
+app.set('io', io);
 
 app.use(cors());
 app.use(express.json());
@@ -50,12 +51,17 @@ app.use((req, res) => {
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  // When a user opens a board, they join that board's "room"
+  socket.on('joinBoard', (boardId) => {
+    socket.join(boardId);
+    console.log('Socket ' + socket.id + ' joined board room: ' + boardId);
+  });
+
   socket.on('disconnect', () => {
     console.log('A user disconnected:', socket.id);
   });
 });
 
-// IMPORTANT: use server.listen instead of app.listen now
 server.listen(PORT, () => {
   console.log('Server running on port ' + PORT);
 });
