@@ -46,13 +46,15 @@ const updateBoard = async (req, res) => {
       return res.status(404).json({ message: 'Board not found' });
     }
 
-    // Only the owner can update
     if (board.owner.toString() !== req.userId) {
       return res.status(403).json({ message: 'Not authorized to update this board' });
     }
 
     board.name = name || board.name;
     await board.save();
+
+    const io = req.app.get('io');
+    io.to(board._id.toString()).emit('boardUpdated', board);
 
     res.status(200).json({ message: 'Board updated successfully', board });
 
@@ -71,12 +73,16 @@ const deleteBoard = async (req, res) => {
       return res.status(404).json({ message: 'Board not found' });
     }
 
-    // Only the owner can delete
     if (board.owner.toString() !== req.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this board' });
     }
 
+    const boardId = board._id.toString();
+
     await board.deleteOne();
+
+    const io = req.app.get('io');
+    io.to(boardId).emit('boardDeleted', { boardId });
 
     res.status(200).json({ message: 'Board deleted successfully' });
 
