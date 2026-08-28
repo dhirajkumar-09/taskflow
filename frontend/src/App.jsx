@@ -1,11 +1,18 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-white">
-        TaskFlow <span className="text-indigo-400">is coming together</span> 🚀
-      </h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<div className="min-h-screen bg-slate-900 text-white p-10 text-2xl">Dashboard coming soon...</div>} />
+        </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
