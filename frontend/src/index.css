@@ -69,3 +69,71 @@ html, body {
 #root {
   overflow-x: hidden;
 }
+/* ---------- Dashboard animations ---------- */
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-in {
+  animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes popBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.5) rotate(-8deg); }
+  60% { transform: scale(0.9) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.pop-animate {
+  animation: popBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes statGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50% { box-shadow: 0 0 24px 0 rgba(99, 102, 241, 0.18); }
+}
+
+.stat-glow {
+  animation: statGlow 3.5s ease-in-out infinite;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+}
+
+.progress-fill {
+  animation: progressFill 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--text), var(--accent-2), var(--accent), var(--text));
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s ease-in-out infinite;
+}

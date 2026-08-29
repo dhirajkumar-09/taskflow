@@ -1,5 +1,6 @@
 const Board = require('../models/Board');
 const User = require('../models/User');
+const Task = require('../models/Task');
 
 const populateBoard = (query) =>
   query
@@ -39,9 +40,107 @@ const getBoards = async (req, res) => {
       $or: [{ owner: req.userId }, { members: req.userId }]
     })
       .populate('members', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ updatedAt: -1 });
 
-    res.status(200).json(boards);
+    const boardIds = boards.map((b) => b._id);
+
+    // Aggregate task totals + done counts per board in a single query
+    const taskStats = await Task.aggregate([
+      { $match: { board: { $in: boardIds } } },
+      {
+        $group: {
+          _id: '$board',
+          total: { $sum: 1 },
+          done: { $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    const statsByBoard = {};
+    taskStats.forEach((s) => { statsByBoard[s._id.toString()] = s; });
+
+    const enriched = boards.map((b) => {
+      const stats = statsByBoard[b._id.toString()] || { total: 0, done: 0 };
+      return {
+        ...b.toObject(),
+        taskCount: stats.total,
+        doneCount: stats.done,
+        isFavorite: b.favorites.some((f) => f.toString() === req.userId)
+      };
+    });
+
+    res.status(200).json(enriched);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Toggle favorite/pin status of a board for the logged-in user
+const toggleFavorite = async (req, res) => {
+  try {
+    const board = await Board.findById(req.params.id);
+    if (!board) {
+      return res.status(404).json({ message: 'Board not found' });
+    }
+
+    const isMember = board.members.some((m) => m.toString() === req.userId) ||
+      board.owner.toString() === req.userId;
+    if (!isMember) {
+      return res.status(403).json({ message: 'Not authorized to favorite this board' });
+    }
+
+    const alreadyFavorite = board.favorites.some((f) => f.toString() === req.userId);
+    if (alreadyFavorite) {
+      board.favorites = board.favorites.filter((f) => f.toString() !== req.userId);
+    } else {
+      board.favorites.push(req.userId);
+    }
+
+    await board.save();
+    res.status(200).json({ isFavorite: !alreadyFavorite });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Dashboard summary stats: total boards, total tasks, and a status breakdown
+// across every board the logged-in user owns or is a member of
+const getStats = async (req, res) => {
+  try {
+    const boards = await Board.find({
+      $or: [{ owner: req.userId }, { members: req.userId }]
+    }).select('_id');
+
+    const boardIds = boards.map((b) => b._id);
+
+    const taskStats = await Task.aggregate([
+      { $match: { board: { $in: boardIds } } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const byStatus = { todo: 0, 'in-progress': 0, done: 0 };
+    taskStats.forEach((s) => { byStatus[s._id] = s.count; });
+
+    const totalTasks = byStatus.todo + byStatus['in-progress'] + byStatus.done;
+    const completionRate = totalTasks === 0 ? 0 : Math.round((byStatus.done / totalTasks) * 100);
+
+    res.status(200).json({
+      totalBoards: boardIds.length,
+      totalTasks,
+      todo: byStatus.todo,
+      inProgress: byStatus['in-progress'],
+      done: byStatus.done,
+      completionRate
+    });
 
   } catch (error) {
     console.error(error);
@@ -198,4 +297,4 @@ const removeMember = async (req, res) => {
   }
 };
 
-module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, addMember, removeMember };
+module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, addMember, removeMember, toggleFavorite, getStats };
