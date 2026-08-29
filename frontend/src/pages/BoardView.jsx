@@ -7,6 +7,7 @@ import {
   useDroppable,
   closestCenter
 } from '@dnd-kit/core';
+import { authFetch } from '../utils/api';
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: '#8b93a7' },
@@ -105,13 +106,9 @@ function BoardView() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('token');
-
   const fetchTasks = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await authFetch(`/api/tasks/${id}`);
       const data = await res.json();
       setTasks(data);
     } catch (err) {
@@ -150,9 +147,8 @@ function BoardView() {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
     try {
-      await fetch('http://localhost:5000/api/tasks', {
+      await authFetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ title: newTaskTitle, boardId: id })
       });
       setNewTaskTitle('');
@@ -164,9 +160,8 @@ function BoardView() {
   const handleStatusChange = async (taskId, newStatus) => {
     setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t)));
     try {
-      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      await authFetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus })
       });
     } catch (err) {
@@ -177,10 +172,7 @@ function BoardView() {
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await authFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
     } catch (err) {
       console.error(err);
     }

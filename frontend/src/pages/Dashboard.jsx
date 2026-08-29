@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/api';
 
 const ACCENT_PAIRS = [
   ['#6366f1', '#a855f7'],
@@ -29,18 +30,15 @@ function Dashboard() {
   const [editName, setEditName] = useState('');
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const fetchBoards = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/boards', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await authFetch('/api/boards');
       const data = await res.json();
       setBoards(data);
     } catch (err) {
-      setError('Failed to load boards');
+      if (err.message !== 'Session expired') setError('Failed to load boards');
     } finally {
       setLoading(false);
     }
@@ -52,45 +50,40 @@ function Dashboard() {
     e.preventDefault();
     if (!newBoardName.trim()) return;
     try {
-      const res = await fetch('http://localhost:5000/api/boards', {
+      const res = await authFetch('/api/boards', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: newBoardName })
       });
       if (!res.ok) throw new Error('Failed to create board');
       setNewBoardName('');
       fetchBoards();
     } catch (err) {
-      setError('Failed to create board');
+      if (err.message !== 'Session expired') setError('Failed to create board');
     }
   };
 
   const handleRename = async (boardId) => {
     if (!editName.trim()) return;
     try {
-      await fetch(`http://localhost:5000/api/boards/${boardId}`, {
+      await authFetch(`/api/boards/${boardId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: editName })
       });
       setEditingId(null);
       fetchBoards();
     } catch (err) {
-      setError('Failed to rename board');
+      if (err.message !== 'Session expired') setError('Failed to rename board');
     }
   };
 
   const handleDeleteBoard = async (boardId) => {
     if (!window.confirm('Delete this board and all its tasks?')) return;
     try {
-      await fetch(`http://localhost:5000/api/boards/${boardId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await authFetch(`/api/boards/${boardId}`, { method: 'DELETE' });
       setOpenMenuId(null);
       fetchBoards();
     } catch (err) {
-      setError('Failed to delete board');
+      if (err.message !== 'Session expired') setError('Failed to delete board');
     }
   };
 
@@ -105,7 +98,6 @@ function Dashboard() {
       <div className="grid-pattern absolute inset-x-0 top-0 h-96 pointer-events-none"></div>
       <div className="glow-orb floaty absolute -top-40 left-1/4 w-[500px] h-[500px] pointer-events-none" style={{ opacity: 0.2 }}></div>
 
-      {/* Click-outside overlay to close menu */}
       {openMenuId && (
         <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)}></div>
       )}
