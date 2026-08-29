@@ -46,7 +46,7 @@ function Dashboard() {
       if (!res.ok) throw new Error('Failed to create board');
 
       setNewBoardName('');
-      fetchBoards(); // refresh the list
+      fetchBoards();
     } catch (err) {
       setError('Failed to create board');
     }
@@ -103,6 +103,7 @@ function Dashboard() {
             {boards.map((board) => (
               <div
                 key={board._id}
+                onClick={() => navigate(`/board/${board._id}`)}
                 className="bg-slate-800 hover:bg-slate-700 rounded-xl p-5 cursor-pointer transition"
               >
                 <h3 className="font-semibold text-lg">{board.name}</h3>
