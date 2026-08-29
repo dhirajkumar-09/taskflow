@@ -6,11 +6,13 @@ function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch('http://localhost:5000/api/auth/signup', {
@@ -29,66 +31,89 @@ function Signup() {
 
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      <div className="bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white mb-2">Create your account</h1>
-        <p className="text-slate-400 mb-6">Start organizing your work with TaskFlow</p>
-
-        {error && (
-          <div className="bg-red-500/10 border border-red-500 text-red-400 text-sm p-3 rounded-lg mb-4">
-            {error}
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4" style={{ background: 'var(--accent)' }}>
+            <span className="font-display text-white text-xl font-bold">T</span>
           </div>
-        )}
+          <h1 className="font-display text-3xl font-bold text-white">Create your account</h1>
+          <p className="mt-2" style={{ color: 'var(--text-muted)' }}>Start organizing your work with TaskFlow</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-slate-300 text-sm mb-1">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
+        <div className="rounded-2xl p-8" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          {error && (
+            <div className="text-sm p-3 rounded-lg mb-5" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
+              {error}
+            </div>
+          )}
 
-          <div>
-            <label className="block text-slate-300 text-sm mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-lg px-4 py-2.5 outline-none transition"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                required
+              />
+            </div>
 
-          <div>
-            <label className="block text-slate-300 text-sm mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg px-4 py-2.5 outline-none transition"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                required
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition"
-          >
-            Sign Up
-          </button>
-        </form>
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg px-4 py-2.5 outline-none transition"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                required
+              />
+              <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>At least 6 characters</p>
+            </div>
 
-        <p className="text-slate-400 text-sm mt-6 text-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full font-medium py-2.5 rounded-lg transition text-white disabled:opacity-60"
+              style={{ background: 'var(--accent)' }}
+              onMouseEnter={(e) => !loading && (e.target.style.background = 'var(--accent-hover)')}
+              onMouseLeave={(e) => !loading && (e.target.style.background = 'var(--accent)')}
+            >
+              {loading ? 'Creating account...' : 'Sign Up'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-sm mt-6 text-center" style={{ color: 'var(--text-muted)' }}>
           Already have an account?{' '}
-          <Link to="/login" className="text-indigo-400 hover:underline">
+          <Link to="/login" className="font-medium" style={{ color: 'var(--accent)' }}>
             Log in
           </Link>
         </p>

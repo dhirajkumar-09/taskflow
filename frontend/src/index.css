@@ -1,1 +1,64 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #06080f;
+  --surface: #10131e;
+  --surface-2: #171b2b;
+  --border: #232842;
+  --accent: #6366f1;
+  --accent-2: #a855f7;
+  --accent-hover: #7678f5;
+  --success: #10b981;
+  --danger: #f87171;
+  --text: #f2f3f7;
+  --text-muted: #8b93a7;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, var(--accent-2), var(--accent) 60%, transparent 75%);
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
+.floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
