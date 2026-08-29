@@ -1,11 +1,75 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  closestCenter
+} from '@dnd-kit/core';
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do' },
   { key: 'in-progress', label: 'In Progress' },
   { key: 'done', label: 'Done' }
 ];
+
+function TaskCard({ task, onDelete }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: task._id
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="bg-slate-700 rounded-lg p-3 cursor-grab active:cursor-grabbing"
+    >
+      <p className="text-sm">{task.title}</p>
+      <div className="flex justify-end mt-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(task._id);
+          }}
+          className="text-red-400 hover:text-red-300 text-xs"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Column({ column, tasks, onDelete }) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.key });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`bg-slate-800/50 rounded-xl p-4 min-h-[200px] transition ${
+        isOver ? 'ring-2 ring-indigo-500' : ''
+      }`}
+    >
+      <h3 className="font-semibold text-slate-300 mb-4">
+        {column.label} ({tasks.length})
+      </h3>
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <TaskCard key={task._id} task={task} onDelete={onDelete} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function BoardView() {
   const { id } = useParams();
@@ -56,6 +120,11 @@ function BoardView() {
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
+    // Update UI immediately for a smooth feel
+    setTasks((prev) =>
+      prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t))
+    );
+
     try {
       await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
         method: 'PUT',
@@ -65,10 +134,9 @@ function BoardView() {
         },
         body: JSON.stringify({ status: newStatus })
       });
-
-      fetchTasks();
     } catch (err) {
       console.error(err);
+      fetchTasks(); // revert on failure
     }
   };
 
@@ -78,10 +146,22 @@ function BoardView() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-
       fetchTasks();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const taskId = active.id;
+    const newStatus = over.id;
+
+    const task = tasks.find((t) => t._id === taskId);
+    if (task && task.status !== newStatus) {
+      handleStatusChange(taskId, newStatus);
     }
   };
 
@@ -117,44 +197,18 @@ function BoardView() {
         {loading ? (
           <p className="text-slate-400">Loading tasks...</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {COLUMNS.map((col) => (
-              <div key={col.key} className="bg-slate-800/50 rounded-xl p-4">
-                <h3 className="font-semibold text-slate-300 mb-4">
-                  {col.label} ({tasks.filter((t) => t.status === col.key).length})
-                </h3>
-
-                <div className="space-y-3">
-                  {tasks
-                    .filter((task) => task.status === col.key)
-                    .map((task) => (
-                      <div key={task._id} className="bg-slate-700 rounded-lg p-3">
-                        <p className="text-sm">{task.title}</p>
-
-                        <div className="flex justify-between items-center mt-3">
-                          <select
-                            value={task.status}
-                            onChange={(e) => handleStatusChange(task._id, e.target.value)}
-                            className="bg-slate-600 text-xs rounded px-2 py-1 outline-none"
-                          >
-                            <option value="todo">To Do</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="done">Done</option>
-                          </select>
-
-                          <button
-                            onClick={() => handleDeleteTask(task._id)}
-                            className="text-red-400 hover:text-red-300 text-xs"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {COLUMNS.map((col) => (
+                <Column
+                  key={col.key}
+                  column={col}
+                  tasks={tasks.filter((t) => t.status === col.key)}
+                  onDelete={handleDeleteTask}
+                />
+              ))}
+            </div>
+          </DndContext>
         )}
       </div>
     </div>
