@@ -8,14 +8,18 @@ const {
   updateBoard,
   deleteBoard,
   addMember,
-  removeMember
+  removeMember,
+  toggleFavorite,
+  getStats
 } = require('../controllers/boardController');
 
 router.post('/', protect, createBoard);
 router.get('/', protect, getBoards);
+router.get('/stats/summary', protect, getStats); // must come before /:id
 router.get('/:id', protect, getBoardById);
 router.put('/:id', protect, updateBoard);
 router.delete('/:id', protect, deleteBoard);
+router.put('/:id/favorite', protect, toggleFavorite);
 router.post('/:id/members', protect, addMember);
 router.delete('/:id/members/:userId', protect, removeMember);
 
