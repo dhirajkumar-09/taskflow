@@ -15,8 +15,7 @@ const COLUMNS = [
   { key: 'done', label: 'Done', color: '#10b981' }
 ];
 
-const socket = io('http://localhost:5000');
-
+const socket = io(import.meta.env.VITE_API_URL);
 function TaskCard({ task, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task._id
