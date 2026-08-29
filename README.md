@@ -128,5 +128,17 @@ Coming soon — deployment in progress.
 
 \- \[x] React frontend with drag-and-drop Kanban board
 
+\- \[x] Board members, task assignees and a per-person workload panel
+
 \- \[ ] Deployment (Vercel + Render)
+
+\## What's new: team boards
+
+Boards now support multiple members, not just a single owner:
+
+\- Board owners can invite any existing TaskFlow user to a board by email (top-right of a board, or via the Team workload panel).
+\- Tasks can be assigned to a specific member with `assignee`, and given a `priority` (low / medium / high).
+\- The **Team workload** panel on each board shows every member's avatar, how many tasks are assigned to them, and a live progress bar of how much of their work is done — the "who did how much" view real Kanban tools have.
+\- All of this is real-time: invites, assignments, and status changes broadcast instantly to everyone on the board via Socket.io.
+\- New endpoints: `GET /api/boards/:id` (board detail with members), `POST /api/boards/:id/members` (invite by email), `DELETE /api/boards/:id/members/:userId` (remove a member).
 

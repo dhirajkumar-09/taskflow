@@ -1,24 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/api';
-
-const ACCENT_PAIRS = [
-  ['#6366f1', '#a855f7'],
-  ['#10b981', '#06b6d4'],
-  ['#f59e0b', '#ef4444'],
-  ['#ec4899', '#8b5cf6'],
-  ['#0ea5e9', '#22d3ee']
-];
-
-function colorFor(name) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return ACCENT_PAIRS[Math.abs(hash) % ACCENT_PAIRS.length];
-}
-
-function initials(name) {
-  return name ? name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '?';
-}
+import { colorFor, initials } from '../utils/avatar';
+import Avatar from '../components/Avatar';
 
 function Dashboard() {
   const [boards, setBoards] = useState([]);
@@ -207,6 +191,22 @@ function Dashboard() {
                         Created {new Date(board.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+
+                    {board.members && board.members.length > 0 && (
+                      <div className="flex items-center -space-x-2 mt-3">
+                        {board.members.slice(0, 4).map((m) => (
+                          <Avatar key={m._id} name={m.name} size={24} ring title={m.name} />
+                        ))}
+                        {board.members.length > 4 && (
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                            style={{ background: 'var(--surface-2)', color: 'var(--text-muted)', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
+                          >
+                            +{board.members.length - 4}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="relative z-20">
                       <button

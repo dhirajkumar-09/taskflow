@@ -10,7 +10,8 @@ router.post(
   [
     body('title').trim().notEmpty().withMessage('Task title is required'),
     body('boardId').notEmpty().withMessage('Board ID is required'),
-    body('status').optional().isIn(['todo', 'in-progress', 'done']).withMessage('Invalid status value')
+    body('status').optional().isIn(['todo', 'in-progress', 'done']).withMessage('Invalid status value'),
+    body('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority value')
   ],
   createTask
 );
@@ -21,7 +22,8 @@ router.put(
   '/:id',
   protect,
   [
-    body('status').optional().isIn(['todo', 'in-progress', 'done']).withMessage('Invalid status value')
+    body('status').optional().isIn(['todo', 'in-progress', 'done']).withMessage('Invalid status value'),
+    body('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority value')
   ],
   updateTask
 );

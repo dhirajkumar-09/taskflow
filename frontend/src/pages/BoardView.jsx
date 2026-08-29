@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
@@ -8,6 +8,10 @@ import {
   closestCenter
 } from '@dnd-kit/core';
 import { authFetch } from '../utils/api';
+import Avatar from '../components/Avatar';
+import TeamPanel from '../components/TeamPanel';
+import InviteMemberModal from '../components/InviteMemberModal';
+import TaskModal from '../components/TaskModal';
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: '#8b93a7' },
@@ -15,8 +19,11 @@ const COLUMNS = [
   { key: 'done', label: 'Done', color: '#10b981' }
 ];
 
+const PRIORITY_COLOR = { low: '#8b93a7', medium: '#f59e0b', high: '#f87171' };
+
 const socket = io(import.meta.env.VITE_API_URL);
-function TaskCard({ task, onDelete }) {
+
+function TaskCard({ task, onDelete, onOpen }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task._id
   });
@@ -35,10 +42,16 @@ function TaskCard({ task, onDelete }) {
       style={{ ...style, background: 'var(--surface-2)', border: '1px solid var(--border)' }}
       {...listeners}
       {...attributes}
-      className="group rounded-xl p-3.5 cursor-grab active:cursor-grabbing transition hover:shadow-lg"
+      onClick={() => onOpen(task)}
+      className="group rounded-xl p-3.5 cursor-grab active:cursor-grabbing transition hover:shadow-lg hover:-translate-y-0.5"
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-white leading-snug">{task.title}</p>
+      <div className="flex items-start justify-between gap-2 mb-2.5">
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+          style={{ background: `${PRIORITY_COLOR[task.priority || 'medium']}22`, color: PRIORITY_COLOR[task.priority || 'medium'] }}
+        >
+          {task.priority || 'medium'}
+        </span>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -52,11 +65,20 @@ function TaskCard({ task, onDelete }) {
           </svg>
         </button>
       </div>
+
+      <p className="text-sm text-white leading-snug mb-3">{task.title}</p>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </span>
+        <Avatar name={task.assignee ? task.assignee.name : ''} size={22} title={task.assignee ? task.assignee.name : 'Unassigned'} />
+      </div>
     </div>
   );
 }
 
-function Column({ column, tasks, onDelete }) {
+function Column({ column, tasks, onDelete, onOpen }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
 
   return (
@@ -91,7 +113,7 @@ function Column({ column, tasks, onDelete }) {
             No tasks here
           </div>
         ) : (
-          tasks.map((task) => <TaskCard key={task._id} task={task} onDelete={onDelete} />)
+          tasks.map((task) => <TaskCard key={task._id} task={task} onDelete={onDelete} onOpen={onOpen} />)
         )}
       </div>
     </div>
@@ -101,9 +123,27 @@ function Column({ column, tasks, onDelete }) {
 function BoardView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const [board, setBoard] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [activeTask, setActiveTask] = useState(null);
+
+  const fetchBoard = async () => {
+    try {
+      const res = await authFetch(`/api/boards/${id}`);
+      if (!res.ok) throw new Error('Failed to load board');
+      const data = await res.json();
+      setBoard(data);
+    } catch (err) {
+      if (err.message !== 'Session expired') setError('Failed to load board');
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -118,6 +158,7 @@ function BoardView() {
   };
 
   useEffect(() => {
+    fetchBoard();
     fetchTasks();
     socket.emit('joinBoard', id);
 
@@ -130,17 +171,32 @@ function BoardView() {
     const handleTaskDeleted = ({ taskId }) => {
       setTasks((prev) => prev.filter((t) => t._id !== taskId));
     };
+    const handleBoardChanged = (updatedBoard) => setBoard(updatedBoard);
 
     socket.on('taskCreated', handleTaskCreated);
     socket.on('taskUpdated', handleTaskUpdated);
     socket.on('taskDeleted', handleTaskDeleted);
+    socket.on('boardUpdated', handleBoardChanged);
+    socket.on('memberAdded', handleBoardChanged);
+    socket.on('memberRemoved', handleBoardChanged);
 
     return () => {
       socket.off('taskCreated', handleTaskCreated);
       socket.off('taskUpdated', handleTaskUpdated);
       socket.off('taskDeleted', handleTaskDeleted);
+      socket.off('boardUpdated', handleBoardChanged);
+      socket.off('memberAdded', handleBoardChanged);
+      socket.off('memberRemoved', handleBoardChanged);
     };
   }, [id]);
+
+  const members = board?.members || [];
+  const isOwner = board && board.owner && board.owner._id === currentUser.id;
+
+  const people = useMemo(
+    () => members.map((m) => ({ ...m, isOwner: board?.owner && m._id === board.owner._id })),
+    [members, board]
+  );
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -148,9 +204,10 @@ function BoardView() {
     try {
       await authFetch('/api/tasks', {
         method: 'POST',
-        body: JSON.stringify({ title: newTaskTitle, boardId: id })
+        body: JSON.stringify({ title: newTaskTitle, boardId: id, assignee: newTaskAssignee || null })
       });
       setNewTaskTitle('');
+      setNewTaskAssignee('');
     } catch (err) {
       console.error(err);
     }
@@ -172,6 +229,43 @@ function BoardView() {
   const handleDeleteTask = async (taskId) => {
     try {
       await authFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateTask = async (taskId, updates) => {
+    try {
+      const res = await authFetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to update task');
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleInvite = async (email) => {
+    const res = await authFetch(`/api/boards/${id}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to add member');
+    setBoard(data.board);
+  };
+
+  const handleRemoveMember = async (userId) => {
+    if (!window.confirm('Remove this person from the board?')) return;
+    try {
+      const res = await authFetch(`/api/boards/${id}/members/${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) setBoard(data.board);
     } catch (err) {
       console.error(err);
     }
@@ -208,17 +302,63 @@ function BoardView() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-8 fade-in-up">
-        <form onSubmit={handleAddTask} className="flex gap-3 mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
+          <div>
+            <h1 className="font-display text-2xl font-bold text-white mb-1">{board ? board.name : 'Loading...'}</h1>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              {people.length} member{people.length !== 1 ? 's' : ''} · {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex items-center -space-x-2.5">
+            {people.slice(0, 6).map((p) => <Avatar key={p._id} name={p.name} size={36} ring title={p.name} />)}
+            {isOwner && (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="w-9 h-9 rounded-full flex items-center justify-center transition shrink-0"
+                style={{ background: 'var(--surface-2)', border: '1.5px dashed var(--border)', color: 'var(--text-muted)', boxShadow: '0 0 0 2px var(--bg)' }}
+                title="Invite a member"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && <p style={{ color: 'var(--danger)' }} className="mb-4">{error}</p>}
+
+        {!loading && (
+          <TeamPanel
+            people={people}
+            tasks={tasks}
+            onInvite={() => setInviteOpen(true)}
+            isOwner={isOwner}
+            currentUserId={currentUser.id}
+            onRemove={handleRemoveMember}
+          />
+        )}
+
+        <form onSubmit={handleAddTask} className="flex flex-wrap gap-3 mb-8">
           <input
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="What needs to get done?"
-            className="flex-1 rounded-lg px-4 py-2.5 outline-none transition"
+            className="flex-1 min-w-[200px] rounded-lg px-4 py-2.5 outline-none transition"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
             onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)'; }}
             onBlur={(e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
           />
+          <select
+            value={newTaskAssignee}
+            onChange={(e) => setNewTaskAssignee(e.target.value)}
+            className="rounded-lg px-3 py-2.5 outline-none transition text-sm"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+          >
+            <option value="">Unassigned</option>
+            {people.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
+          </select>
           <button
             type="submit"
             className="px-5 py-2.5 rounded-lg font-medium text-white transition shrink-0"
@@ -243,12 +383,24 @@ function BoardView() {
                   column={col}
                   tasks={tasks.filter((t) => t.status === col.key)}
                   onDelete={handleDeleteTask}
+                  onOpen={setActiveTask}
                 />
               ))}
             </div>
           </DndContext>
         )}
       </div>
+
+      {inviteOpen && <InviteMemberModal onClose={() => setInviteOpen(false)} onInvite={handleInvite} />}
+      {activeTask && (
+        <TaskModal
+          task={activeTask}
+          members={people}
+          onClose={() => setActiveTask(null)}
+          onSave={handleUpdateTask}
+          onDelete={handleDeleteTask}
+        />
+      )}
     </div>
   );
 }

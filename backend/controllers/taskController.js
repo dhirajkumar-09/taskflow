@@ -2,12 +2,18 @@ const Task = require('../models/Task');
 const Board = require('../models/Board');
 const { validationResult } = require('express-validator');
 
-const verifyBoardOwnership = async (boardId, userId) => {
+// Returns: null if board doesn't exist, false if the user has no access,
+// or the board document if the user is the owner or a member.
+const verifyBoardAccess = async (boardId, userId) => {
   const board = await Board.findById(boardId);
   if (!board) return null;
-  if (board.owner.toString() !== userId) return false;
+  const hasAccess = board.owner.toString() === userId ||
+    board.members.some((m) => m.toString() === userId);
+  if (!hasAccess) return false;
   return board;
 };
+
+const populateTask = (query) => query.populate('assignee', 'name email');
 
 // Create a new task
 const createTask = async (req, res) => {
@@ -17,9 +23,9 @@ const createTask = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, description, status, boardId } = req.body;
+    const { title, description, status, priority, boardId, assignee } = req.body;
 
-    const board = await verifyBoardOwnership(boardId, req.userId);
+    const board = await verifyBoardAccess(boardId, req.userId);
     if (board === null) {
       return res.status(404).json({ message: 'Board not found' });
     }
@@ -27,20 +33,27 @@ const createTask = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to add tasks to this board' });
     }
 
+    if (assignee && !board.members.some((m) => m.toString() === assignee) && board.owner.toString() !== assignee) {
+      return res.status(400).json({ message: 'Assignee must be a member of this board' });
+    }
+
     const newTask = new Task({
       title,
       description,
       status: status || 'todo',
+      priority: priority || 'medium',
+      assignee: assignee || null,
       board: boardId
     });
 
     await newTask.save();
+    const populated = await populateTask(Task.findById(newTask._id));
 
     // Notify everyone in this board's room that a new task was created
     const io = req.app.get('io');
-    io.to(boardId).emit('taskCreated', newTask);
+    io.to(boardId).emit('taskCreated', populated);
 
-    res.status(201).json({ message: 'Task created successfully', task: newTask });
+    res.status(201).json({ message: 'Task created successfully', task: populated });
 
   } catch (error) {
     console.error(error);
@@ -53,7 +66,7 @@ const getTasks = async (req, res) => {
   try {
     const { boardId } = req.params;
 
-    const board = await verifyBoardOwnership(boardId, req.userId);
+    const board = await verifyBoardAccess(boardId, req.userId);
     if (board === null) {
       return res.status(404).json({ message: 'Board not found' });
     }
@@ -61,7 +74,7 @@ const getTasks = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view tasks of this board' });
     }
 
-    const tasks = await Task.find({ board: boardId }).sort({ createdAt: 1 });
+    const tasks = await populateTask(Task.find({ board: boardId }).sort({ createdAt: 1 }));
     res.status(200).json(tasks);
 
   } catch (error) {
@@ -84,24 +97,32 @@ const updateTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    const board = await verifyBoardOwnership(task.board, req.userId);
+    const board = await verifyBoardAccess(task.board, req.userId);
     if (board === false || board === null) {
       return res.status(403).json({ message: 'Not authorized to update this task' });
     }
 
-    const { title, description, status } = req.body;
+    const { title, description, status, priority, assignee } = req.body;
+
+    if (assignee !== undefined && assignee !== null &&
+      !board.members.some((m) => m.toString() === assignee) && board.owner.toString() !== assignee) {
+      return res.status(400).json({ message: 'Assignee must be a member of this board' });
+    }
 
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
     if (status !== undefined) task.status = status;
+    if (priority !== undefined) task.priority = priority;
+    if (assignee !== undefined) task.assignee = assignee || null;
 
     await task.save();
+    const populated = await populateTask(Task.findById(task._id));
 
     // Notify everyone in this board's room that a task was updated
     const io = req.app.get('io');
-    io.to(task.board.toString()).emit('taskUpdated', task);
+    io.to(task.board.toString()).emit('taskUpdated', populated);
 
-    res.status(200).json({ message: 'Task updated successfully', task });
+    res.status(200).json({ message: 'Task updated successfully', task: populated });
 
   } catch (error) {
     console.error(error);
@@ -118,7 +139,7 @@ const deleteTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    const board = await verifyBoardOwnership(task.board, req.userId);
+    const board = await verifyBoardAccess(task.board, req.userId);
     if (board === false || board === null) {
       return res.status(403).json({ message: 'Not authorized to delete this task' });
     }
