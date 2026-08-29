@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import {
   DndContext,
   useDraggable,
@@ -12,6 +13,8 @@ const COLUMNS = [
   { key: 'in-progress', label: 'In Progress' },
   { key: 'done', label: 'Done' }
 ];
+
+const socket = io('http://localhost:5000');
 
 function TaskCard({ task, onDelete }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -96,6 +99,38 @@ function BoardView() {
 
   useEffect(() => {
     fetchTasks();
+
+    // Join this board's real-time room
+    socket.emit('joinBoard', id);
+
+    // Listen for real-time events
+    const handleTaskCreated = (newTask) => {
+      setTasks((prev) => {
+        if (prev.some((t) => t._id === newTask._id)) return prev;
+        return [...prev, newTask];
+      });
+    };
+
+    const handleTaskUpdated = (updatedTask) => {
+      setTasks((prev) =>
+        prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+      );
+    };
+
+    const handleTaskDeleted = ({ taskId }) => {
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    };
+
+    socket.on('taskCreated', handleTaskCreated);
+    socket.on('taskUpdated', handleTaskUpdated);
+    socket.on('taskDeleted', handleTaskDeleted);
+
+    // Cleanup listeners when leaving this board
+    return () => {
+      socket.off('taskCreated', handleTaskCreated);
+      socket.off('taskUpdated', handleTaskUpdated);
+      socket.off('taskDeleted', handleTaskDeleted);
+    };
   }, [id]);
 
   const handleAddTask = async (e) => {
@@ -113,14 +148,13 @@ function BoardView() {
       });
 
       setNewTaskTitle('');
-      fetchTasks();
+      // No need to call fetchTasks() — the socket event will add it
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
-    // Update UI immediately for a smooth feel
     setTasks((prev) =>
       prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t))
     );
@@ -136,7 +170,7 @@ function BoardView() {
       });
     } catch (err) {
       console.error(err);
-      fetchTasks(); // revert on failure
+      fetchTasks();
     }
   };
 
@@ -146,7 +180,7 @@ function BoardView() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchTasks();
+      // No need to call fetchTasks() — the socket event will remove it
     } catch (err) {
       console.error(err);
     }
