@@ -228,12 +228,14 @@ function Dashboard() {
           <span className="font-display text-white font-semibold text-lg">TaskFlow</span>
         </div>
         <div className="flex items-center gap-4">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 transition-transform duration-200 hover:scale-110"
-            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
-          >
-            {initials(user.name)}
-          </div>
+         <button
+  onClick={() => navigate('/profile')}
+  title="Edit profile"
+  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 transition-transform duration-200 hover:scale-110"
+  style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
+>
+  {initials(user.name)}
+</button>
           <button
             onClick={handleLogout}
             className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5"

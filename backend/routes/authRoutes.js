@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { signup, login } = require('../controllers/authController');
+const { signup, login, getProfile, updateProfile } = require('../controllers/authController');
+const protect = require('../middleware/authMiddleware');
 
 router.post(
   '/signup',
@@ -20,6 +21,21 @@ router.post(
     body('password').notEmpty().withMessage('Password is required')
   ],
   login
+);
+
+// Get current user's profile
+router.get('/profile', protect, getProfile);
+
+// Update current user's profile (name, college, department)
+router.put(
+  '/profile',
+  protect,
+  [
+    body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+    body('college').optional().trim(),
+    body('department').optional().trim()
+  ],
+  updateProfile
 );
 
 module.exports = router;
