@@ -5,7 +5,10 @@ import {
   DndContext,
   useDraggable,
   useDroppable,
-  closestCenter
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor
 } from '@dnd-kit/core';
 import { authFetch } from '../utils/api';
 import Avatar from '../components/Avatar';
@@ -133,6 +136,15 @@ function BoardView() {
   const [error, setError] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
+
+  // Require a small pointer movement before dnd-kit treats it as a drag.
+  // Without this, every click is first evaluated as a potential drag,
+  // which is what made the task modal feel slow to open.
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 }
+    })
+  );
 
   const fetchBoard = async () => {
     try {
@@ -375,7 +387,7 @@ function BoardView() {
             ))}
           </div>
         ) : (
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {COLUMNS.map((col) => (
                 <Column

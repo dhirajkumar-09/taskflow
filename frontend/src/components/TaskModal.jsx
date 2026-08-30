@@ -39,8 +39,8 @@ function TaskModal({ task, members, onClose, onSave, onDelete }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl p-6 fade-in-up max-h-[85vh] overflow-y-auto"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        className="w-full max-w-lg rounded-2xl p-6 scale-in max-h-[85vh] overflow-y-auto"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', animationDuration: '0.2s' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-5 gap-3">

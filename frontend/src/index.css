@@ -58,6 +58,231 @@ h1, h2, h3, .font-display {
 .floaty {
   animation: floaty 6s ease-in-out infinite;
 }
+
+/* ===== Premium animation utilities =====
+   Edit the durations/delays below to tune the feel.
+   These are plain CSS classes — sprinkle them on any element. */
+
+/* Staggered fade-up: add .stagger-item plus .delay-1 ... .delay-8 */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.12s; }
+.delay-3 { animation-delay: 0.19s; }
+.delay-4 { animation-delay: 0.26s; }
+.delay-5 { animation-delay: 0.33s; }
+.delay-6 { animation-delay: 0.4s; }
+.delay-7 { animation-delay: 0.47s; }
+.delay-8 { animation-delay: 0.54s; }
+
+/* Soft scale-in, good for cards/modals popping in */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Animated gradient text (headlines) */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-text-animated {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+/* Button shine sweep */
+.shine-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shine-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+.shine-btn:hover::after {
+  left: 130%;
+}
+
+/* Glowing pulse ring, e.g. around the logo mark */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(99,102,241,0); }
+}
+.glow-pulse {
+  animation: glowPulse 2.4s ease-out infinite;
+}
+
+/* Shake — for form errors */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Shimmer skeleton loader (replaces flat animate-pulse blocks) */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Small spinner for loading buttons */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* Lift + glow on hover, good for cards */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Slow drifting blob movement, layer on top of .glow-orb for extra life */
+@keyframes drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -20px) scale(1.08); }
+  66%  { transform: translate(-20px, 15px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.drift {
+  animation: drift 14s ease-in-out infinite;
+}
+
+/* Animated underline for links / nav items */
+.animated-underline {
+  position: relative;
+}
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0%;
+  height: 1px;
+  background: var(--accent-2);
+  transition: width 0.25s ease;
+}
+.animated-underline:hover::after {
+  width: 100%;
+}
+
+/* Bouncing scroll cue */
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+.bounce-down {
+  animation: bounceDown 1.8s ease-in-out infinite;
+}
+
+/* ===== Dashboard-specific classes ===== */
+
+/* Static animated-gradient heading, e.g. "Your boards" */
+.gradient-text {
+  background: linear-gradient(135deg, var(--text) 20%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Stat cards: soft glow that intensifies on hover */
+.stat-glow {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.stat-glow:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 8px 28px rgba(99,102,241,0.2);
+}
+
+/* Skeleton loader shimmer (used while boards are loading) */
+@keyframes skeletonShimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.6s linear infinite;
+}
+
+/* Card entrance: fade + rise + slight scale, staggered via inline animationDelay */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.card-in {
+  animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Favorite star "pop" when toggled */
+@keyframes popAnimate {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.5) rotate(-10deg); }
+  60% { transform: scale(0.85) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.pop-animate {
+  animation: popAnimate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Board progress bar fill — smooth width transition + moving highlight */
+.progress-fill {
+  position: relative;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: translateX(-100%);
+  animation: progressSheen 2.2s ease-in-out infinite;
+}
+@keyframes progressSheen {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
 input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset !important;
   -webkit-text-fill-color: var(--text) !important;
@@ -68,72 +293,4 @@ html, body {
 
 #root {
   overflow-x: hidden;
-}
-/* ---------- Dashboard animations ---------- */
-
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(18px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.card-in {
-  animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--surface) 0%,
-    var(--surface-2) 50%,
-    var(--surface) 100%
-  );
-  background-size: 800px 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-}
-
-@keyframes popBounce {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.5) rotate(-8deg); }
-  60% { transform: scale(0.9) rotate(4deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-
-.pop-animate {
-  animation: popBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@keyframes statGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-  50% { box-shadow: 0 0 24px 0 rgba(99, 102, 241, 0.18); }
-}
-
-.stat-glow {
-  animation: statGlow 3.5s ease-in-out infinite;
-}
-
-@keyframes progressFill {
-  from { width: 0%; }
-}
-
-.progress-fill {
-  animation: progressFill 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.gradient-text {
-  background: linear-gradient(90deg, var(--text), var(--accent-2), var(--accent), var(--text));
-  background-size: 300% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradientShift 6s ease-in-out infinite;
 }

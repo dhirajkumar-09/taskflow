@@ -28,18 +28,38 @@ function AnimatedNumber({ value }) {
   return display;
 }
 
-function StatCard({ label, value, accent, suffix = '' }) {
+function StatCard({ label, value, accent, suffix = '', icon }) {
   return (
     <div
-      className="stat-glow rounded-2xl px-5 py-4 flex-1 min-w-[140px] transition-transform hover:-translate-y-0.5"
+      className="stat-glow rounded-2xl px-5 py-4 flex-1 min-w-[140px] transition-transform hover:-translate-y-0.5 flex items-center gap-4"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
     >
-      <p className="text-xs uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
-      <p className="font-display text-2xl font-bold" style={{ color: accent || 'var(--text)' }}>
-        <AnimatedNumber value={value} />{suffix}
-      </p>
+      {icon && (
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: `${accent || 'var(--accent)'}1a` }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            {icon}
+          </svg>
+        </div>
+      )}
+      <div>
+        <p className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
+        <p className="font-display text-2xl font-bold leading-none" style={{ color: accent || 'var(--text)' }}>
+          <AnimatedNumber value={value} />{suffix}
+        </p>
+      </div>
     </div>
   );
+}
+
+// Returns "Good morning / afternoon / evening" based on the current time
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
 function Dashboard() {
@@ -187,22 +207,25 @@ function Dashboard() {
       )}
 
       <nav
-        className="sticky top-0 z-20 flex justify-between items-center px-8 py-4"
-        style={{ background: 'rgba(6,8,15,0.7)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)' }}
+        className="sticky top-0 z-20 flex justify-between items-center px-8 py-4 fade-in-up"
+        style={{ background: 'rgba(6,8,15,0.7)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', animationDuration: '0.4s' }}
       >
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-pulse" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
             <span className="font-display text-white text-sm font-bold">T</span>
           </div>
           <span className="font-display text-white font-semibold text-lg">TaskFlow</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}>
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 transition-transform duration-200 hover:scale-110"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
+          >
             {initials(user.name)}
           </div>
           <button
             onClick={handleLogout}
-            className="text-sm px-4 py-2 rounded-lg transition"
+            className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
           >
             Logout
@@ -211,8 +234,9 @@ function Dashboard() {
       </nav>
 
       <div className="relative z-0 max-w-5xl mx-auto px-6 py-14 fade-in-up">
-        <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-4 stagger-item">
           <div>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>{getGreeting()}, {user.name?.split(' ')[0] || 'there'} 👋</p>
             <h2 className="gradient-text font-display text-4xl font-bold mb-2">Your boards</h2>
             <p style={{ color: 'var(--text-muted)' }}>
               {boards.length === 0 ? 'Nothing here yet — create your first board' : `${boards.length} board${boards.length > 1 ? 's' : ''} in progress`}
@@ -221,11 +245,32 @@ function Dashboard() {
         </div>
 
         {stats && (
-          <div className="flex flex-wrap gap-4 mb-10">
-            <StatCard label="Total Boards" value={stats.totalBoards} />
-            <StatCard label="Total Tasks" value={stats.totalTasks} />
-            <StatCard label="Completed" value={stats.done} accent="var(--success)" />
-            <StatCard label="Completion Rate" value={stats.completionRate} suffix="%" accent="var(--accent-2)" />
+          <div className="flex flex-wrap gap-4 mb-10 stagger-item delay-1">
+            <StatCard
+              label="Total Boards"
+              value={stats.totalBoards}
+              accent="var(--accent)"
+              icon={<path d="M9 4v16M15 4v16M4 9h16M4 15h16" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round"/>}
+            />
+            <StatCard
+              label="Total Tasks"
+              value={stats.totalTasks}
+              accent="var(--accent-2)"
+              icon={<path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>}
+            />
+            <StatCard
+              label="Completed"
+              value={stats.done}
+              accent="var(--success)"
+              icon={<path d="M20 6L9 17l-5-5" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+            />
+            <StatCard
+              label="Completion Rate"
+              value={stats.completionRate}
+              suffix="%"
+              accent="#f59e0b"
+              icon={<path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="#f59e0b" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>}
+            />
           </div>
         )}
 
@@ -242,7 +287,7 @@ function Dashboard() {
           />
           <button
             type="submit"
-            className="px-6 py-3 rounded-xl font-medium text-white transition shrink-0"
+            className="shine-btn px-6 py-3 rounded-xl font-medium text-white transition-all duration-200 shrink-0 hover:-translate-y-0.5 active:translate-y-0"
             style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 4px 20px rgba(99,102,241,0.35)' }}
           >
             + New Board
@@ -309,12 +354,24 @@ function Dashboard() {
             ))}
           </div>
         ) : boards.length === 0 ? (
-          <div className="text-center py-20 rounded-2xl" style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}>
-            <p className="text-xl font-medium text-white mb-2">No boards yet</p>
-            <p style={{ color: 'var(--text-muted)' }}>Create one above to start organizing your work</p>
+          <div className="text-center py-20 rounded-2xl scale-in relative overflow-hidden" style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}>
+            <div className="glow-orb floaty absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 pointer-events-none" style={{ opacity: 0.15 }}></div>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 floaty relative z-10" style={{ background: 'rgba(99,102,241,0.12)' }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M9 4v16M15 4v16M4 9h16M4 15h16" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <p className="text-xl font-medium text-white mb-2 relative z-10">No boards yet</p>
+            <p className="relative z-10" style={{ color: 'var(--text-muted)' }}>Create one above to start organizing your work</p>
           </div>
         ) : visibleBoards.length === 0 ? (
-          <div className="text-center py-20 rounded-2xl" style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}>
+          <div className="text-center py-20 rounded-2xl scale-in" style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(245,158,11,0.12)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
             <p className="text-xl font-medium text-white mb-2">No matching boards</p>
             <p style={{ color: 'var(--text-muted)' }}>Try a different search or clear the Favorites filter</p>
           </div>
@@ -362,7 +419,7 @@ function Dashboard() {
 
                     <button
                       onClick={(e) => handleToggleFavorite(e, board._id)}
-                      className={`p-1.5 rounded-lg transition shrink-0 ${poppingId === board._id ? 'pop-animate' : ''}`}
+                      className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-125 shrink-0 ${poppingId === board._id ? 'pop-animate' : ''}`}
                       title={board.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                       style={{ color: board.isFavorite ? '#f59e0b' : 'var(--text-muted)' }}
                     >
