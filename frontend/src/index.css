@@ -294,3 +294,96 @@ html, body {
 #root {
   overflow-x: hidden;
 }
+
+/* ===== 3D effects ===== */
+
+.perspective-1000 { perspective: 1000px; }
+
+.tilt-3d {
+  transition: transform 0.12s ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Small spinning 3D cube used as the logo mark on auth screens */
+.cube-3d-wrap {
+  perspective: 300px;
+  width: 36px;
+  height: 36px;
+}
+.cube-3d {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  transform-style: preserve-3d;
+  animation: cubeSpin 9s linear infinite;
+}
+.cube-face {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: white;
+  font-size: 15px;
+  backface-visibility: hidden;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.cube-face-front  { background: linear-gradient(135deg, var(--accent), var(--accent-2)); transform: translateZ(18px); }
+.cube-face-back   { background: linear-gradient(135deg, var(--accent-2), var(--accent)); transform: rotateY(180deg) translateZ(18px); }
+.cube-face-right  { background: var(--accent-2); opacity: 0.85; transform: rotateY(90deg) translateZ(18px); }
+.cube-face-left   { background: var(--accent); opacity: 0.85; transform: rotateY(-90deg) translateZ(18px); }
+.cube-face-top    { background: var(--accent-2); opacity: 0.6; transform: rotateX(90deg) translateZ(18px); }
+.cube-face-bottom { background: var(--accent); opacity: 0.6; transform: rotateX(-90deg) translateZ(18px); }
+
+@keyframes cubeSpin {
+  0%   { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+/* Decorative floating 3D card stack, used on the auth screens */
+.card-stack-3d {
+  perspective: 1000px;
+  width: 220px;
+  height: 150px;
+}
+.stack-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.1));
+  backdrop-filter: blur(6px);
+}
+.stack-layer-1 {
+  transform: rotateX(55deg) rotateZ(-8deg) translateZ(0px);
+  animation: stackFloat1 7s ease-in-out infinite;
+}
+.stack-layer-2 {
+  transform: rotateX(55deg) rotateZ(-8deg) translateZ(-30px) translateY(20px);
+  opacity: 0.7;
+  animation: stackFloat2 7s ease-in-out infinite;
+  animation-delay: -2s;
+}
+.stack-layer-3 {
+  transform: rotateX(55deg) rotateZ(-8deg) translateZ(-60px) translateY(40px);
+  opacity: 0.4;
+  animation: stackFloat3 7s ease-in-out infinite;
+  animation-delay: -4s;
+}
+@keyframes stackFloat1 {
+  0%, 100% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(0px) translateY(0px); }
+  50% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(0px) translateY(-10px); }
+}
+@keyframes stackFloat2 {
+  0%, 100% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(-30px) translateY(20px); }
+  50% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(-30px) translateY(8px); }
+}
+@keyframes stackFloat3 {
+  0%, 100% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(-60px) translateY(40px); }
+  50% { transform: rotateX(55deg) rotateZ(-8deg) translateZ(-60px) translateY(26px); }
+}

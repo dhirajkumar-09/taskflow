@@ -31,8 +31,19 @@ function AnimatedNumber({ value }) {
 function StatCard({ label, value, accent, suffix = '', icon }) {
   return (
     <div
-      className="stat-glow rounded-2xl px-5 py-4 flex-1 min-w-[140px] transition-transform hover:-translate-y-0.5 flex items-center gap-4"
+      className="stat-glow tilt-3d rounded-2xl px-5 py-4 flex-1 min-w-[140px] flex items-center gap-4"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rotateX = ((y - rect.height / 2) / rect.height) * -6;
+        const rotateY = ((x - rect.width / 2) / rect.width) * 6;
+        e.currentTarget.style.transform = `perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(0)';
+      }}
     >
       {icon && (
         <div
@@ -386,10 +397,23 @@ function Dashboard() {
               return (
                 <div
                   key={board._id}
-                  className="group card-in rounded-2xl p-6 transition-all duration-300 relative"
+                  className="group card-in tilt-3d rounded-2xl p-6 relative"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', animationDelay: `${Math.min(index, 8) * 60}ms` }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = c1; e.currentTarget.style.boxShadow = `0 12px 34px ${c1}22`; e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const rotateX = ((y - rect.height / 2) / rect.height) * -10;
+                    const rotateY = ((x - rect.width / 2) / rect.width) * 10;
+                    e.currentTarget.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.015)`;
+                    e.currentTarget.style.borderColor = c1;
+                    e.currentTarget.style.boxShadow = `0 20px 40px ${c1}22`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${c1}, ${c2})` }}></div>
 

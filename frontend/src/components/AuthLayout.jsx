@@ -11,12 +11,16 @@ function AuthLayout({ children }) {
         <div className="glow-orb floaty w-56 h-56 top-1/3 right-10" style={{ opacity: 0.18, animationDelay: '-2s' }}></div>
 
         <div className="relative z-10 max-w-md">
-          <div className="inline-flex items-center gap-2 mb-8 stagger-item">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center glow-pulse"
-              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
-            >
-              <span className="font-display text-white text-lg font-bold">T</span>
+          <div className="inline-flex items-center gap-3 mb-8 stagger-item">
+            <div className="cube-3d-wrap">
+              <div className="cube-3d">
+                <div className="cube-face cube-face-front">T</div>
+                <div className="cube-face cube-face-back">T</div>
+                <div className="cube-face cube-face-right"></div>
+                <div className="cube-face cube-face-left"></div>
+                <div className="cube-face cube-face-top"></div>
+                <div className="cube-face cube-face-bottom"></div>
+              </div>
             </div>
             <span className="font-display text-white text-lg font-semibold">TaskFlow</span>
           </div>
@@ -29,9 +33,16 @@ function AuthLayout({ children }) {
             A real-time board for teams who'd rather be building than managing spreadsheets.
           </p>
 
-          <div className="mt-10 space-y-4">
+          {/* Floating 3D card stack — purely decorative */}
+          <div className="card-stack-3d relative mt-10 mb-2 stagger-item delay-3 hidden lg:block" style={{ transformStyle: 'preserve-3d' }}>
+            <div className="stack-layer stack-layer-3"></div>
+            <div className="stack-layer stack-layer-2"></div>
+            <div className="stack-layer stack-layer-1"></div>
+          </div>
+
+          <div className="mt-8 space-y-4">
             {['Boards that update instantly for everyone', 'Drag, drop, done — no friction', 'Built for small teams that move fast'].map((text, i) => (
-              <div key={text} className={`flex items-start gap-3 stagger-item delay-${i + 3}`}>
+              <div key={text} className={`flex items-start gap-3 stagger-item delay-${i + 4}`}>
                 <div className="w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0" style={{ background: 'rgba(99,102,241,0.15)' }}>
                   <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                     <path d="M2.5 6.5L4.5 8.5L9.5 3.5" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
