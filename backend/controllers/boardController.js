@@ -39,6 +39,7 @@ const getBoards = async (req, res) => {
     const boards = await Board.find({
       $or: [{ owner: req.userId }, { members: req.userId }]
     })
+      .populate('owner', 'name email')
       .populate('members', 'name email')
       .sort({ updatedAt: -1 });
 

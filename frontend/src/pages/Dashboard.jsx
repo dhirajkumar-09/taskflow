@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/api';
 import { colorFor, initials } from '../utils/avatar';
@@ -115,7 +115,16 @@ function Dashboard() {
   };
 
   useEffect(() => { fetchBoards(); fetchStats(); }, []);
-
+  useEffect(() => {
+  if (!openMenuId) return;
+  const handleOutsideClick = (e) => {
+    if (!e.target.closest('[data-board-menu]')) {
+      setOpenMenuId(null);
+    }
+  };
+  document.addEventListener('mousedown', handleOutsideClick);
+  return () => document.removeEventListener('mousedown', handleOutsideClick);
+}, [openMenuId]);
   const handleCreateBoard = async (e) => {
     e.preventDefault();
     if (!newBoardName.trim()) return;
@@ -136,26 +145,30 @@ function Dashboard() {
   const handleRename = async (boardId) => {
     if (!editName.trim()) return;
     try {
-      await authFetch(`/api/boards/${boardId}`, {
+      const res = await authFetch(`/api/boards/${boardId}`, {
         method: 'PUT',
         body: JSON.stringify({ name: editName })
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to rename board');
       setEditingId(null);
       fetchBoards();
     } catch (err) {
-      if (err.message !== 'Session expired') setError('Failed to rename board');
+      if (err.message !== 'Session expired') setError(err.message || 'Failed to rename board');
     }
   };
 
   const handleDeleteBoard = async (boardId) => {
     if (!window.confirm('Delete this board and all its tasks?')) return;
     try {
-      await authFetch(`/api/boards/${boardId}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/boards/${boardId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to delete board');
       setOpenMenuId(null);
       fetchBoards();
       fetchStats();
     } catch (err) {
-      if (err.message !== 'Session expired') setError('Failed to delete board');
+      if (err.message !== 'Session expired') setError(err.message || 'Failed to delete board');
     }
   };
 
@@ -214,9 +227,7 @@ function Dashboard() {
       <div className="grid-pattern absolute inset-x-0 top-0 h-96 pointer-events-none"></div>
       <div className="glow-orb floaty absolute -top-40 left-1/4 w-[500px] h-[500px] pointer-events-none" style={{ opacity: 0.2 }}></div>
 
-      {openMenuId && (
-        <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)}></div>
-      )}
+      
 
       <nav
         className="sticky top-0 z-20 flex justify-between items-center px-8 py-4 fade-in-up"
@@ -401,7 +412,7 @@ function Dashboard() {
               return (
                 <div
                   key={board._id}
-                  className="group card-in tilt-3d rounded-2xl p-6 relative"
+                  className={`group card-in tilt-3d rounded-2xl p-6 relative ${openMenuId === board._id ? 'z-30' : 'z-0'}`}
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', animationDelay: `${Math.min(index, 8) * 60}ms` }}
                   onMouseMove={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -442,6 +453,11 @@ function Dashboard() {
                       )}
                       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                         Created {new Date(board.createdAt).toLocaleDateString()}
+                        {board.owner && (
+                          <> · Leader: <span style={{ color: 'var(--text)' }}>
+                            {board.owner._id === user.id ? 'You' : board.owner.name}
+                          </span></>
+                        )}
                       </p>
                     </div>
 
@@ -456,7 +472,8 @@ function Dashboard() {
                       </svg>
                     </button>
 
-                    <div className="relative z-20">
+                    {board.owner && board.owner._id === user.id && (
+                    <div className="relative z-20" data-board-menu>
                       <button
                         onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === board._id ? null : board._id); }}
                         className="p-1.5 rounded-lg transition"
@@ -489,6 +506,7 @@ function Dashboard() {
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
 
                   <div className="mt-4 flex items-center justify-between gap-2">

@@ -151,8 +151,13 @@ function BoardView() {
   const fetchBoard = async () => {
     try {
       const res = await authFetch(`/api/boards/${id}`);
-      if (!res.ok) throw new Error('Failed to load board');
       const data = await res.json();
+      if (!res.ok) {
+        setError(res.status === 403
+          ? "You don't have access to this board. Ask the owner to invite you."
+          : (data.message || 'Failed to load board'));
+        return;
+      }
       setBoard(data);
     } catch (err) {
       if (err.message !== 'Session expired') setError('Failed to load board');
@@ -163,7 +168,12 @@ function BoardView() {
     try {
       const res = await authFetch(`/api/tasks/${id}`);
       const data = await res.json();
-      setTasks(data);
+      if (!res.ok) {
+        setError((prev) => prev || data.message || 'Failed to load tasks');
+        setTasks([]);
+        return;
+      }
+      setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -316,6 +326,18 @@ function BoardView() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-8 fade-in-up">
+        {error && !board && (
+          <div
+            className="rounded-2xl p-8 text-center"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-lg font-semibold text-white mb-2">Can't open this board</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{error}</p>
+          </div>
+        )}
+
+        {board && (
+        <>
         <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
           <div>
             <h1 className="font-display text-2xl font-bold text-white mb-1">{board ? board.name : 'Loading...'}</h1>
@@ -416,11 +438,13 @@ function BoardView() {
             </div>
           </DndContext>
         )}
+        </>
+        )}
       </div>
 
-      {inviteOpen && <InviteMemberModal onClose={() => setInviteOpen(false)} onInvite={handleInvite} />}
-      {aiAssistOpen && <AIBoardAssistModal boardId={id} onClose={() => setAiAssistOpen(false)} />}
-      {activeTask && (
+      {board && inviteOpen && <InviteMemberModal onClose={() => setInviteOpen(false)} onInvite={handleInvite} />}
+      {board && aiAssistOpen && <AIBoardAssistModal boardId={id} onClose={() => setAiAssistOpen(false)} />}
+      {board && activeTask && (
         <TaskModal
           task={activeTask}
           members={people}

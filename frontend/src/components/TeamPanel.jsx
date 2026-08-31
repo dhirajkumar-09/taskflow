@@ -53,9 +53,13 @@ function TeamPanel({ people, tasks, onInvite, isOwner, currentUserId, onRemove }
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
                     {person.name}
-                    {person.isOwner && (
+                    {person.isOwner ? (
                       <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0" style={{ background: 'rgba(168,85,247,0.15)', color: 'var(--accent-2)' }}>
-                        OWNER
+                        LEADER
+                      </span>
+                    ) : (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0" style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                        MEMBER
                       </span>
                     )}
                   </p>
