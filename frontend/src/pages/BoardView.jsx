@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { socket } from '../utils/socket';
 import {
   DndContext,
   useDraggable,
@@ -15,6 +15,7 @@ import Avatar from '../components/Avatar';
 import TeamPanel from '../components/TeamPanel';
 import InviteMemberModal from '../components/InviteMemberModal';
 import TaskModal from '../components/TaskModal';
+import AIBoardAssistModal from '../components/AIBoardAssistModal';
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: '#8b93a7' },
@@ -24,7 +25,7 @@ const COLUMNS = [
 
 const PRIORITY_COLOR = { low: '#8b93a7', medium: '#f59e0b', high: '#f87171' };
 
-const socket = io(import.meta.env.VITE_API_URL);
+
 
 function TaskCard({ task, onDelete, onOpen }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -136,6 +137,7 @@ function BoardView() {
   const [error, setError] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
+  const [aiAssistOpen, setAiAssistOpen] = useState(false);
 
   // Require a small pointer movement before dnd-kit treats it as a drag.
   // Without this, every click is first evaluated as a potential drag,
@@ -263,13 +265,13 @@ function BoardView() {
   };
 
   const handleInvite = async (email) => {
-    const res = await authFetch(`/api/boards/${id}/members`, {
+    const res = await authFetch('/api/invitations', {
       method: 'POST',
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ boardId: id, email })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Failed to add member');
-    setBoard(data.board);
+    if (!res.ok) throw new Error(data.message || 'Failed to send invite');
+    // Board itself is unchanged until they accept — nothing to update here.
   };
 
   const handleRemoveMember = async (userId) => {
@@ -321,6 +323,18 @@ function BoardView() {
               {people.length} member{people.length !== 1 ? 's' : ''} · {tasks.length} task{tasks.length !== 1 ? 's' : ''}
             </p>
           </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAiAssistOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-full transition shrink-0"
+              style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--accent)' }}
+              title="Ask AI how to finish this board faster"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2zM19 14l.8 2.6L22 17.5l-2.2.9L19 21l-.8-2.6-2.2-.9 2.2-.9L19 14z" />
+              </svg>
+              AI Team Assistant
+            </button>
           <div className="flex items-center -space-x-2.5">
             {people.slice(0, 6).map((p) => <Avatar key={p._id} name={p.name} size={36} ring title={p.name} />)}
             {isOwner && (
@@ -335,6 +349,7 @@ function BoardView() {
                 </svg>
               </button>
             )}
+          </div>
           </div>
         </div>
 
@@ -404,6 +419,7 @@ function BoardView() {
       </div>
 
       {inviteOpen && <InviteMemberModal onClose={() => setInviteOpen(false)} onInvite={handleInvite} />}
+      {aiAssistOpen && <AIBoardAssistModal boardId={id} onClose={() => setAiAssistOpen(false)} />}
       {activeTask && (
         <TaskModal
           task={activeTask}

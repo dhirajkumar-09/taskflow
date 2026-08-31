@@ -14,7 +14,7 @@ function InviteMemberModal({ onClose, onInvite }) {
       await onInvite(email.trim());
       onClose();
     } catch (err) {
-      setError(err.message || 'Failed to add member');
+      setError(err.message || 'Failed to send invite');
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ function InviteMemberModal({ onClose, onInvite }) {
       >
         <h3 className="font-display font-semibold text-white text-lg mb-1">Invite a teammate</h3>
         <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-          They need an existing TaskFlow account. Enter the email they signed up with.
+          They need an existing TaskFlow account. We'll send them a request — they'll join once they accept it.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -66,7 +66,7 @@ function InviteMemberModal({ onClose, onInvite }) {
               className="flex-1 py-2.5 rounded-xl font-medium text-white transition disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
             >
-              {loading ? 'Adding...' : 'Add member'}
+              {loading ? 'Sending...' : 'Send invite'}
             </button>
           </div>
         </form>

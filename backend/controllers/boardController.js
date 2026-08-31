@@ -229,45 +229,6 @@ const deleteBoard = async (req, res) => {
   }
 };
 
-// Add a member to a board by email — owner only
-const addMember = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
-    }
-
-    const board = await Board.findById(req.params.id);
-    if (!board) {
-      return res.status(404).json({ message: 'Board not found' });
-    }
-    if (board.owner.toString() !== req.userId) {
-      return res.status(403).json({ message: 'Only the board owner can invite members' });
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      return res.status(404).json({ message: 'No TaskFlow user found with that email' });
-    }
-    if (board.members.some((m) => m.toString() === user._id.toString())) {
-      return res.status(400).json({ message: 'This person is already on the board' });
-    }
-
-    board.members.push(user._id);
-    await board.save();
-    const populated = await populateBoard(Board.findById(board._id));
-
-    const io = req.app.get('io');
-    io.to(board._id.toString()).emit('memberAdded', populated);
-
-    res.status(200).json({ message: 'Member added successfully', board: populated });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 // Remove a member from a board — owner only, cannot remove the owner
 const removeMember = async (req, res) => {
   try {
@@ -297,4 +258,4 @@ const removeMember = async (req, res) => {
   }
 };
 
-module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, addMember, removeMember, toggleFavorite, getStats };
+module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, removeMember, toggleFavorite, getStats };

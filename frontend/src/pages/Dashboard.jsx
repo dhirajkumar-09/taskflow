@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/api';
 import { colorFor, initials } from '../utils/avatar';
 import Avatar from '../components/Avatar';
+import InvitationsBell from '../components/InvitationsBell';
 
 function AnimatedNumber({ value }) {
   const [display, setDisplay] = useState(0);
@@ -228,6 +229,7 @@ function Dashboard() {
           <span className="font-display text-white font-semibold text-lg">TaskFlow</span>
         </div>
         <div className="flex items-center gap-4">
+          <InvitationsBell onAccepted={fetchBoards} />
          <button
   onClick={() => navigate('/profile')}
   title="Edit profile"

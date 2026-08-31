@@ -7,7 +7,6 @@ const {
   getBoardById,
   updateBoard,
   deleteBoard,
-  addMember,
   removeMember,
   toggleFavorite,
   getStats
@@ -20,7 +19,6 @@ router.get('/:id', protect, getBoardById);
 router.put('/:id', protect, updateBoard);
 router.delete('/:id', protect, deleteBoard);
 router.put('/:id/favorite', protect, toggleFavorite);
-router.post('/:id/members', protect, addMember);
 router.delete('/:id/members/:userId', protect, removeMember);
 
 module.exports = router;

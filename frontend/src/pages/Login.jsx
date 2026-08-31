@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
+import { registerUser } from '../utils/socket';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -28,6 +29,7 @@ function Login() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      registerUser();
       navigate('/dashboard');
 
     } catch (err) {

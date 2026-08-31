@@ -8,6 +8,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const boardRoutes = require('./routes/boardRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const invitationRoutes = require('./routes/invitationRoutes');
 const protect = require('./middleware/authMiddleware');
 
 const app = express();
@@ -34,6 +36,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TaskFlow server is running' });
@@ -50,6 +54,14 @@ app.use((req, res) => {
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
+
+  // When a user logs in / opens the app, they join a personal room so we
+  // can push things like invitation notifications straight to them.
+  socket.on('registerUser', (userId) => {
+    if (userId) {
+      socket.join(`user:${userId}`);
+    }
+  });
 
   // When a user opens a board, they join that board's "room"
   socket.on('joinBoard', (boardId) => {

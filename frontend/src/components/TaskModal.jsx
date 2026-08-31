@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Avatar from './Avatar';
+import { authFetch } from '../utils/api';
 
 const PRIORITIES = [
   { key: 'low', label: 'Low', color: '#8b93a7' },
@@ -20,6 +21,36 @@ function TaskModal({ task, members, onClose, onSave, onDelete }) {
   const [priority, setPriority] = useState(task.priority || 'medium');
   const [assignee, setAssignee] = useState(task.assignee ? task.assignee._id : '');
   const [saving, setSaving] = useState(false);
+
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiResult, setAiResult] = useState(null); // { steps: [...], tip: '' }
+
+  const handleAiBreakdown = async () => {
+    if (!title.trim()) return;
+    setAiLoading(true);
+    setAiError('');
+    setAiResult(null);
+    try {
+      const res = await authFetch('/api/ai/breakdown', {
+        method: 'POST',
+        body: JSON.stringify({ title, description })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'AI assistant failed');
+      setAiResult(data);
+    } catch (err) {
+      setAiError(err.message || 'Could not reach AI assistant');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleInsertSteps = () => {
+    if (!aiResult?.steps?.length) return;
+    const checklist = aiResult.steps.map((s) => `- [ ] ${s}`).join('\n');
+    setDescription((prev) => (prev.trim() ? `${prev.trim()}\n\n${checklist}` : checklist));
+  };
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -57,15 +88,63 @@ function TaskModal({ task, members, onClose, onSave, onDelete }) {
           </button>
         </div>
 
-        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>Description</label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Description</label>
+          <button
+            type="button"
+            onClick={handleAiBreakdown}
+            disabled={aiLoading || !title.trim()}
+            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition disabled:opacity-50"
+            style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--accent)' }}
+            title="Ask AI to break this task into steps"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2zM19 14l.8 2.6L22 17.5l-2.2.9L19 21l-.8-2.6-2.2-.9 2.2-.9L19 14z" />
+            </svg>
+            {aiLoading ? 'Thinking...' : 'Ask AI'}
+          </button>
+        </div>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Add more detail..."
-          className="w-full rounded-xl px-3.5 py-2.5 outline-none transition text-sm mb-5 resize-none"
+          className="w-full rounded-xl px-3.5 py-2.5 outline-none transition text-sm resize-none"
           style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
         />
+
+        <div className="mb-5">
+          {aiError && (
+            <p className="text-xs mt-2" style={{ color: 'var(--danger)' }}>{aiError}</p>
+          )}
+
+          {aiResult && (
+            <div
+              className="mt-3 rounded-xl p-3.5 text-sm"
+              style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)' }}
+            >
+              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--accent)' }}>
+                ✨ AI suggested steps to finish this fast
+              </p>
+              <ol className="list-decimal list-inside space-y-1 mb-2" style={{ color: 'var(--text)' }}>
+                {aiResult.steps.map((step, i) => (
+                  <li key={i} className="text-sm">{step}</li>
+                ))}
+              </ol>
+              {aiResult.tip && (
+                <p className="text-xs italic mb-3" style={{ color: 'var(--text-muted)' }}>💡 {aiResult.tip}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleInsertSteps}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg transition"
+                style={{ background: 'var(--accent)', color: 'white' }}
+              >
+                Add checklist to description
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
