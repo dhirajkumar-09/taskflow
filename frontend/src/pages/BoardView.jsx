@@ -23,11 +23,38 @@ const COLUMNS = [
   { key: 'done', label: 'Done', color: '#10b981' }
 ];
 
+const PRIORITIES = [
+  { key: 'low', label: 'Low' },
+  { key: 'medium', label: 'Medium' },
+  { key: 'high', label: 'High' }
+];
+
 const PRIORITY_COLOR = { low: '#8b93a7', medium: '#f59e0b', high: '#f87171' };
 
+// Mirrors the server's progress -> column mapping so the board never shows
+// (even for a split second) a state the backend wouldn't allow.
+const deriveStatus = (progress) => {
+  const p = Number(progress) || 0;
+  if (p >= 100) return 'done';
+  if (p >= 50) return 'in-progress';
+  return 'todo';
+};
 
+// Days remaining until a due date (negative = overdue), null if no due date
+const daysRemaining = (isoDate) => {
+  if (!isoDate) return null;
+  const due = new Date(isoDate);
+  if (Number.isNaN(due.getTime())) return null;
+  const today = new Date();
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return Math.round((due - today) / (1000 * 60 * 60 * 24));
+};
 
-function TaskCard({ task, onDelete, onOpen }) {
+function TaskCard({ task, onDelete, onOpen, canDelete }) {
+  const remaining = daysRemaining(task.dueDate);
+  const overdue = remaining !== null && remaining < 0 && task.status !== 'done';
+  const progress = task.progress ?? 0;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task._id
   });
@@ -56,25 +83,48 @@ function TaskCard({ task, onDelete, onOpen }) {
         >
           {task.priority || 'medium'}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(task._id);
-          }}
-          className="opacity-0 group-hover:opacity-100 transition shrink-0"
-          style={{ color: 'var(--danger)' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+        {canDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(task._id);
+            }}
+            className="opacity-0 group-hover:opacity-100 transition shrink-0"
+            style={{ color: 'var(--danger)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       <p className="text-sm text-white leading-snug mb-3">{task.title}</p>
 
+      {task.assignee && (
+        <div className="mb-2.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Progress</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'var(--accent)' }}>{progress}%</span>
+          </div>
+          <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
-        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-          {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        <span className="text-[11px]" style={{ color: overdue ? 'var(--danger)' : 'var(--text-muted)' }}>
+          {task.dueDate
+            ? overdue
+              ? `${Math.abs(remaining)} din late`
+              : remaining === 0
+              ? 'Aaj deadline'
+              : `${remaining} din baaki`
+            : new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
         <Avatar name={task.assignee ? task.assignee.name : ''} size={22} title={task.assignee ? task.assignee.name : 'Unassigned'} />
       </div>
@@ -82,7 +132,7 @@ function TaskCard({ task, onDelete, onOpen }) {
   );
 }
 
-function Column({ column, tasks, onDelete, onOpen }) {
+function Column({ column, tasks, onDelete, onOpen, canDelete }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
 
   return (
@@ -117,7 +167,9 @@ function Column({ column, tasks, onDelete, onOpen }) {
             No tasks here
           </div>
         ) : (
-          tasks.map((task) => <TaskCard key={task._id} task={task} onDelete={onDelete} onOpen={onOpen} />)
+          tasks.map((task) => (
+            <TaskCard key={task._id} task={task} onDelete={onDelete} onOpen={onOpen} canDelete={canDelete} />
+          ))
         )}
       </div>
     </div>
@@ -133,8 +185,11 @@ function BoardView() {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
+  const [newTaskDays, setNewTaskDays] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [dragBlockedMsg, setDragBlockedMsg] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
   const [aiAssistOpen, setAiAssistOpen] = useState(false);
@@ -226,27 +281,29 @@ function BoardView() {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
     try {
+      let dueDate = null;
+      const days = parseInt(newTaskDays, 10);
+      if (!Number.isNaN(days) && days >= 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        dueDate = d.toISOString().slice(0, 10);
+      }
       await authFetch('/api/tasks', {
         method: 'POST',
-        body: JSON.stringify({ title: newTaskTitle, boardId: id, assignee: newTaskAssignee || null })
+        body: JSON.stringify({
+          title: newTaskTitle,
+          boardId: id,
+          assignee: newTaskAssignee || null,
+          dueDate,
+          priority: newTaskPriority
+        })
       });
       setNewTaskTitle('');
       setNewTaskAssignee('');
+      setNewTaskDays('');
+      setNewTaskPriority('medium');
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const handleStatusChange = async (taskId, newStatus) => {
-    setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t)));
-    try {
-      await authFetch(`/api/tasks/${taskId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus })
-      });
-    } catch (err) {
-      console.error(err);
-      fetchTasks();
     }
   };
 
@@ -295,12 +352,21 @@ function BoardView() {
     }
   };
 
+  // The board is strictly progress-driven: a task's column is determined
+  // by its actual progress %, never by dragging. Dropping a task on a
+  // different column never sends a status change — it just snaps back and
+  // explains why, so a 30%/75% task can't be bypassed into a later column.
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (!over) return;
     const task = tasks.find((t) => t._id === active.id);
-    if (task && task.status !== over.id) {
-      handleStatusChange(active.id, over.id);
+    if (!task) return;
+    const actualColumn = deriveStatus(task.progress);
+    if (over.id !== actualColumn) {
+      const label = COLUMNS.find((c) => c.key === actualColumn)?.label || actualColumn;
+      setDragBlockedMsg(`This task is ${task.progress ?? 0}% done, so it stays in "${label}". Open it to update progress.`);
+      window.clearTimeout(handleDragEnd._t);
+      handleDragEnd._t = window.setTimeout(() => setDragBlockedMsg(''), 3200);
     }
   };
 
@@ -388,34 +454,64 @@ function BoardView() {
           />
         )}
 
-        <form onSubmit={handleAddTask} className="flex flex-wrap gap-3 mb-8">
-          <input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="What needs to get done?"
-            className="flex-1 min-w-[200px] rounded-lg px-4 py-2.5 outline-none transition"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
-            onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
-          />
-          <select
-            value={newTaskAssignee}
-            onChange={(e) => setNewTaskAssignee(e.target.value)}
-            className="rounded-lg px-3 py-2.5 outline-none transition text-sm"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        {isOwner && (
+          <form onSubmit={handleAddTask} className="flex flex-wrap gap-3 mb-8">
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="What needs to get done?"
+              className="flex-1 min-w-[200px] rounded-lg px-4 py-2.5 outline-none transition"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+            />
+            <select
+              value={newTaskAssignee}
+              onChange={(e) => setNewTaskAssignee(e.target.value)}
+              className="rounded-lg px-3 py-2.5 outline-none transition text-sm"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+            >
+              <option value="">Unassigned</option>
+              {people.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
+            </select>
+            <select
+              value={newTaskPriority}
+              onChange={(e) => setNewTaskPriority(e.target.value)}
+              title="Only the leader sets priority"
+              className="rounded-lg px-3 py-2.5 outline-none transition text-sm"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+            >
+              {PRIORITIES.map((p) => <option key={p.key} value={p.key}>{p.label} priority</option>)}
+            </select>
+            <input
+              type="number"
+              min="0"
+              value={newTaskDays}
+              onChange={(e) => setNewTaskDays(e.target.value)}
+              placeholder="Din me khatam?"
+              title="Kitne dino me task khatam karna hai"
+              className="w-[130px] rounded-lg px-3 py-2.5 outline-none transition text-sm"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+            />
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-lg font-medium text-white transition shrink-0"
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
+            >
+              + Add Task
+            </button>
+          </form>
+        )}
+
+        {dragBlockedMsg && (
+          <div
+            className="text-xs rounded-lg px-3.5 py-2.5 mb-5"
+            style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b' }}
           >
-            <option value="">Unassigned</option>
-            {people.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
-          </select>
-          <button
-            type="submit"
-            className="px-5 py-2.5 rounded-lg font-medium text-white transition shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
-          >
-            + Add Task
-          </button>
-        </form>
+            {dragBlockedMsg}
+          </div>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -433,6 +529,7 @@ function BoardView() {
                   tasks={tasks.filter((t) => t.status === col.key)}
                   onDelete={handleDeleteTask}
                   onOpen={setActiveTask}
+                  canDelete={isOwner}
                 />
               ))}
             </div>
@@ -451,6 +548,8 @@ function BoardView() {
           onClose={() => setActiveTask(null)}
           onSave={handleUpdateTask}
           onDelete={handleDeleteTask}
+          isLeader={isOwner}
+          currentUserId={currentUser.id}
         />
       )}
     </div>

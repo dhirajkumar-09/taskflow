@@ -27,7 +27,9 @@ const io = new Server(server, {
 app.set('io', io);
 
 app.use(cors());
-app.use(express.json());
+// Raised limit so task attachments (sent as base64 JSON) can go through;
+// files themselves are still capped per-file in the task controller.
+app.use(express.json({ limit: '15mb' }));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
