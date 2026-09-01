@@ -120,10 +120,10 @@ function TaskCard({ task, onDelete, onOpen, canDelete }) {
         <span className="text-[11px]" style={{ color: overdue ? 'var(--danger)' : 'var(--text-muted)' }}>
           {task.dueDate
             ? overdue
-              ? `${Math.abs(remaining)} din late`
+              ? `${Math.abs(remaining)} Days late`
               : remaining === 0
               ? 'Aaj deadline'
-              : `${remaining} din baaki`
+              : `${remaining} Days baaki`
             : new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
         <Avatar name={task.assignee ? task.assignee.name : ''} size={22} title={task.assignee ? task.assignee.name : 'Unassigned'} />
@@ -489,8 +489,8 @@ function BoardView() {
               min="0"
               value={newTaskDays}
               onChange={(e) => setNewTaskDays(e.target.value)}
-              placeholder="Din me khatam?"
-              title="Kitne dino me task khatam karna hai"
+              placeholder="complete in days?"
+              title="How many days do we have to finish it?"
               className="w-[130px] rounded-lg px-3 py-2.5 outline-none transition text-sm"
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
             />
