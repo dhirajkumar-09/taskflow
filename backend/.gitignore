@@ -1,3 +1,5 @@
 node_modules
 .env
 .env.txt
+uploads/tasks/*
+!uploads/tasks/.gitkeep
