@@ -2,6 +2,21 @@ const Task = require('../models/Task');
 const Board = require('../models/Board');
 const { callGeminiJSON } = require('../services/geminiService');
 
+// Turns a raw Gemini error into a message safe/useful to show the user.
+const friendlyAiError = (error) => {
+  const msg = error.message || '';
+  if (msg.includes('503') || msg.includes('UNAVAILABLE')) {
+    return "Gemini is experiencing high demand right now. Please try again in a moment.";
+  }
+  if (msg.includes('429')) {
+    return 'AI request limit reached — please wait a moment and try again.';
+  }
+  if (msg.includes('GEMINI_API_KEY')) {
+    return 'AI assistant is not configured on the server.';
+  }
+  return 'AI assistant is unavailable right now';
+};
+
 // Returns null if board doesn't exist, false if the user has no access,
 // or the populated board document if the user is the owner or a member.
 const verifyBoardAccess = async (boardId, userId) => {
@@ -44,7 +59,7 @@ Respond ONLY with valid JSON, no markdown fences, no extra commentary, in exactl
     });
   } catch (error) {
     console.error('AI breakdown error:', error);
-    res.status(502).json({ message: 'AI assistant is unavailable right now', error: error.message });
+    res.status(502).json({ message: friendlyAiError(error) });
   }
 };
 
@@ -111,7 +126,7 @@ Respond ONLY with valid JSON, no markdown fences, no extra commentary, in exactl
     });
   } catch (error) {
     console.error('AI board assist error:', error);
-    res.status(502).json({ message: 'AI assistant is unavailable right now', error: error.message });
+    res.status(502).json({ message: friendlyAiError(error) });
   }
 };
 
