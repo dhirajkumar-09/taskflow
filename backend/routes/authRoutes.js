@@ -3,9 +3,11 @@ const router = express.Router();
 const { body } = require('express-validator');
 const { signup, login, getProfile, updateProfile } = require('../controllers/authController');
 const protect = require('../middleware/authMiddleware');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 router.post(
   '/signup',
+  authLimiter,
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Please enter a valid email address'),
@@ -16,6 +18,7 @@ router.post(
 
 router.post(
   '/login',
+  authLimiter,
   [
     body('email').isEmail().withMessage('Please enter a valid email address'),
     body('password').notEmpty().withMessage('Password is required')
