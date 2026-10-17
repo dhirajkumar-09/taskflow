@@ -57,7 +57,7 @@ const readAsBase64 = (file) =>
 function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, currentUserId }) {
   const isAssignee = !!(task.assignee && task.assignee._id === currentUserId);
   const canEditDetails = !!isLeader;
-  const canUpdateProgress = isLeader || isAssignee;
+  const canUpdateProgress = isLeader || isAssignee || !task.assignee;
 
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
@@ -85,8 +85,35 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
   const attachments = liveTask.attachments || [];
   const comments = liveTask.comments || [];
   const reactions = liveTask.reactions || [];
+  const activityLog = liveTask.activityLog || [];
   const likeCount = reactions.filter((r) => r.type === 'like').length;
   const iAlreadyLiked = reactions.some((r) => r.type === 'like' && r.user && r.user._id === currentUserId);
+
+  // Tab inside the comments/activity section
+  const [activeTab, setActiveTab] = useState('comments');
+
+  // Human-readable description of an activity log entry
+  const formatActivity = (entry) => {
+    const field = entry.field || '';
+    const oldV = entry.oldVal || '';
+    const newV = entry.newVal || '';
+    switch (entry.action) {
+      case 'created': return `Task banaya: "${newV}"`;
+      case 'commented': return `Comment: "${newV}"`;
+      case 'attached': return `File attach ki: ${newV}`;
+      case 'updated': {
+        if (field === 'progress') return `Progress: ${oldV} → ${newV}`;
+        if (field === 'priority') return `Priority: ${oldV} → ${newV}`;
+        if (field === 'assignee') return `Assignee badla: ${oldV || 'none'} → ${newV || 'none'}`;
+        if (field === 'dueDate') return `Deadline: ${oldV} → ${newV}`;
+        if (field === 'title') return `Title: "${oldV}" → "${newV}"`;
+        if (field === 'description') return 'Description update ki';
+        if (field === 'labels') return `Labels: ${newV}`;
+        return `"${field}" badla`;
+      }
+      default: return entry.action;
+    }
+  };
 
   const handleAiBreakdown = async () => {
     if (!title.trim()) return;
@@ -128,6 +155,7 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
 
     if (canUpdateProgress) {
       updates.progress = progress;
+      updates.status = deriveStatus(progress);
       updates.progressNote = progressNote;
     }
 
@@ -398,9 +426,55 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Progress</label>
-              <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{progress}%</span>
+              <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Status & Progress</label>
+              <span className="text-xs font-semibold" style={{ color: previewStatus === 'done' ? 'var(--success)' : previewStatus === 'in-progress' ? '#f59e0b' : 'var(--accent)' }}>
+                {progress}%
+              </span>
             </div>
+
+            {/* Quick Status Buttons */}
+            <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+              <button
+                type="button"
+                onClick={() => setProgress(0)}
+                disabled={!canUpdateProgress}
+                className="py-1 px-2 text-xs rounded-lg font-medium transition text-center"
+                style={{
+                  background: previewStatus === 'todo' ? 'rgba(139,147,167,0.2)' : 'var(--bg)',
+                  border: previewStatus === 'todo' ? '1px solid #8b93a7' : '1px solid var(--border)',
+                  color: previewStatus === 'todo' ? 'white' : 'var(--text-muted)'
+                }}
+              >
+                ⚪ To Do
+              </button>
+              <button
+                type="button"
+                onClick={() => setProgress(50)}
+                disabled={!canUpdateProgress}
+                className="py-1 px-2 text-xs rounded-lg font-medium transition text-center"
+                style={{
+                  background: previewStatus === 'in-progress' ? 'rgba(245,158,11,0.2)' : 'var(--bg)',
+                  border: previewStatus === 'in-progress' ? '1px solid #f59e0b' : '1px solid var(--border)',
+                  color: previewStatus === 'in-progress' ? '#f59e0b' : 'var(--text-muted)'
+                }}
+              >
+                🟡 Doing
+              </button>
+              <button
+                type="button"
+                onClick={() => setProgress(100)}
+                disabled={!canUpdateProgress}
+                className="py-1 px-2 text-xs rounded-lg font-medium transition text-center"
+                style={{
+                  background: previewStatus === 'done' ? 'rgba(16,185,129,0.2)' : 'var(--bg)',
+                  border: previewStatus === 'done' ? '1px solid #10b981' : '1px solid var(--border)',
+                  color: previewStatus === 'done' ? '#10b981' : 'var(--text-muted)'
+                }}
+              >
+                🟢 Done ✓
+              </button>
+            </div>
+
             <input
               type="range"
               min="0"
@@ -415,7 +489,10 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
             <div className="w-full h-1.5 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--bg)' }}>
               <div
                 className="h-full rounded-full transition-all"
-                style={{ width: `${progress}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+                style={{
+                  width: `${progress}%`,
+                  background: previewStatus === 'done' ? 'var(--success)' : 'linear-gradient(90deg, var(--accent), var(--accent-2))'
+                }}
               />
             </div>
             {!canUpdateProgress && (
@@ -532,8 +609,25 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
         </div>
 
         <div className="mb-6 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
-          <div className="flex items-center justify-between mb-2.5">
-            <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Leader review</label>
+          {/* Section header row: tabs + like button */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex gap-1">
+              {['comments', 'activity'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition"
+                  style={{
+                    background: activeTab === tab ? 'var(--accent)' : 'var(--bg)',
+                    color: activeTab === tab ? 'white' : 'var(--text-muted)',
+                    border: `1px solid ${activeTab === tab ? 'var(--accent)' : 'var(--border)'}`
+                  }}
+                >
+                  {tab === 'comments' ? `💬 Comments (${comments.length})` : `📋 Activity Log`}
+                </button>
+              ))}
+            </div>
+            {/* Like button — leader only */}
             <button
               onClick={isLeader ? handleToggleLike : undefined}
               disabled={!isLeader || reacting}
@@ -549,40 +643,71 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
             </button>
           </div>
 
-          {comments.length === 0 ? (
-            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>No responses yet</p>
-          ) : (
-            <div className="space-y-2 mb-3">
-              {comments.map((c) => (
-                <div key={c._id} className="rounded-lg px-3 py-2 text-xs" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Avatar name={c.author ? c.author.name : ''} size={16} />
-                    <span className="font-medium" style={{ color: 'var(--text)' }}>{c.author ? c.author.name : 'Leader'}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                  </div>
-                  <p style={{ color: 'var(--text)' }}>{c.text}</p>
+          {/* Comments tab */}
+          {activeTab === 'comments' && (
+            <>
+              {comments.length === 0 ? (
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Abhi koi comment nahi</p>
+              ) : (
+                <div className="space-y-2 mb-3">
+                  {comments.map((c) => (
+                    <div key={c._id} className="rounded-lg px-3 py-2 text-xs" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Avatar name={c.author ? c.author.name : ''} size={16} />
+                        <span className="font-medium" style={{ color: 'var(--text)' }}>{c.author ? c.author.name : 'User'}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                      <p style={{ color: 'var(--text)' }}>{c.text}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Comment input — open to any board member */}
+              <div className="flex gap-2">
+                <input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePostComment(); } }}
+                  placeholder="Comment likhein..."
+                  className="flex-1 rounded-lg px-3 py-2 outline-none text-xs"
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                />
+                <button
+                  onClick={handlePostComment}
+                  disabled={postingComment || !commentText.trim()}
+                  className="text-xs font-medium px-3 py-2 rounded-lg transition disabled:opacity-50"
+                  style={{ background: 'var(--accent)', color: 'white' }}
+                >
+                  {postingComment ? '...' : 'Send'}
+                </button>
+              </div>
+            </>
           )}
 
-          {isLeader && (
-            <div className="flex gap-2">
-              <input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Respond to this progress update..."
-                className="flex-1 rounded-lg px-3 py-2 outline-none text-xs"
-                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
-              />
-              <button
-                onClick={handlePostComment}
-                disabled={postingComment || !commentText.trim()}
-                className="text-xs font-medium px-3 py-2 rounded-lg transition disabled:opacity-50"
-                style={{ background: 'var(--accent)', color: 'white' }}
-              >
-                {postingComment ? '...' : 'Send'}
-              </button>
+          {/* Activity Log tab */}
+          {activeTab === 'activity' && (
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {activityLog.length === 0 ? (
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Koi activity nahi mili</p>
+              ) : (
+                [...activityLog].reverse().map((entry, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-xs rounded-lg px-2.5 py-2"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+                  >
+                    <Avatar name={entry.user ? entry.user.name : ''} size={16} />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium" style={{ color: 'var(--text)' }}>{entry.user ? entry.user.name : 'User'} </span>
+                      <span style={{ color: 'var(--text-muted)' }}>{formatActivity(entry)}</span>
+                    </div>
+                    <span className="shrink-0 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(entry.at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

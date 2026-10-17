@@ -21,7 +21,8 @@ router.post(
     body('title').trim().notEmpty().withMessage('Task title is required'),
     body('boardId').notEmpty().withMessage('Board ID is required'),
     body('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority value'),
-    body('dueDate').optional({ nullable: true }).isISO8601().withMessage('Invalid due date')
+    body('dueDate').optional({ nullable: true }).isISO8601().withMessage('Invalid due date'),
+    body('labels').optional().isArray({ max: 5 }).withMessage('Labels must be an array (max 5)')
   ],
   createTask
 );
@@ -32,6 +33,7 @@ router.put(
   '/:id',
   protect,
   [
+    body('status').optional().isIn(['todo', 'in-progress', 'done']).withMessage('Invalid status value'),
     body('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority value'),
     body('dueDate').optional({ nullable: true }).isISO8601().withMessage('Invalid due date'),
     body('progress').optional().isInt({ min: 0, max: 100 }).withMessage('Progress must be between 0 and 100')

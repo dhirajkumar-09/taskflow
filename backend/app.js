@@ -6,7 +6,9 @@ const boardRoutes = require('./routes/boardRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const invitationRoutes = require('./routes/invitationRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const protect = require('./middleware/authMiddleware');
+
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.use('/api/boards', boardRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/invitations', invitationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TaskFlow server is running' });

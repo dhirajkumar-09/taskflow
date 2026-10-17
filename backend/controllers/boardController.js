@@ -1,6 +1,8 @@
 const Board = require('../models/Board');
 const User = require('../models/User');
 const Task = require('../models/Task');
+const BOARD_TEMPLATES = require('../boardTemplates');
+
 
 const populateBoard = (query) =>
   query
@@ -10,7 +12,7 @@ const populateBoard = (query) =>
 // Create a new board
 const createBoard = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, template } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'Board name is required' });
@@ -25,6 +27,25 @@ const createBoard = async (req, res) => {
     await newBoard.save();
     const board = await populateBoard(Board.findById(newBoard._id));
 
+    // If a valid template key is provided, create the template tasks
+    if (template && BOARD_TEMPLATES[template]) {
+      const templateDef = BOARD_TEMPLATES[template];
+      const today = new Date();
+      const taskDocs = templateDef.tasks.map((t, i) => ({
+        title: t.title,
+        description: t.description || '',
+        status: 'todo',
+        priority: t.priority || 'medium',
+        assignee: null,
+        dueDate: null,
+        progress: 0,
+        board: newBoard._id,
+        createdBy: req.userId,
+        labels: t.labels || []
+      }));
+      await Task.insertMany(taskDocs);
+    }
+
     res.status(201).json({ message: 'Board created successfully', board });
 
   } catch (error) {
@@ -32,6 +53,7 @@ const createBoard = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 // Get all boards the logged-in user owns or is a member of
 const getBoards = async (req, res) => {
@@ -259,4 +281,86 @@ const removeMember = async (req, res) => {
   }
 };
 
-module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, removeMember, toggleFavorite, getStats };
+module.exports = { createBoard, getBoards, getBoardById, updateBoard, deleteBoard, removeMember, toggleFavorite, getStats, getBoardAnalytics, getBoardTemplates };
+
+// Board-level analytics — member performance + daily task completions (last 14 days)
+async function getBoardAnalytics(req, res) {
+  try {
+    const board = await Board.findById(req.params.id);
+    if (!board) return res.status(404).json({ message: 'Board not found' });
+
+    const isMember = board.members.some((m) => m.toString() === req.userId) ||
+      board.owner.toString() === req.userId;
+    if (!isMember) return res.status(403).json({ message: 'Not authorized' });
+
+    const tasks = await Task.find({ board: req.params.id })
+      .populate('assignee', 'name email');
+
+    // Member performance
+    const memberMap = {};
+    for (const t of tasks) {
+      const key = t.assignee ? t.assignee._id.toString() : '__unassigned__';
+      const name = t.assignee ? t.assignee.name : 'Unassigned';
+      if (!memberMap[key]) {
+        memberMap[key] = { name, assigned: 0, done: 0, inProgress: 0, todo: 0 };
+      }
+      memberMap[key].assigned++;
+      if (t.status === 'done') memberMap[key].done++;
+      else if (t.status === 'in-progress') memberMap[key].inProgress++;
+      else memberMap[key].todo++;
+    }
+
+    // Daily completions for last 14 days (based on updatedAt of done tasks)
+    const now = new Date();
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      days.push({ date: d.toISOString().slice(0, 10), count: 0 });
+    }
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - 13);
+    cutoff.setHours(0, 0, 0, 0);
+
+    for (const t of tasks) {
+      if (t.status === 'done' && t.updatedAt >= cutoff) {
+        const key = t.updatedAt.toISOString().slice(0, 10);
+        const day = days.find((d) => d.date === key);
+        if (day) day.count++;
+      }
+    }
+
+    // Priority breakdown
+    const priorityBreakdown = { low: 0, medium: 0, high: 0 };
+    for (const t of tasks) {
+      priorityBreakdown[t.priority] = (priorityBreakdown[t.priority] || 0) + 1;
+    }
+
+    res.status(200).json({
+      memberPerformance: Object.values(memberMap),
+      dailyCompletions: days,
+      priorityBreakdown,
+      totals: {
+        total: tasks.length,
+        done: tasks.filter((t) => t.status === 'done').length,
+        inProgress: tasks.filter((t) => t.status === 'in-progress').length,
+        todo: tasks.filter((t) => t.status === 'todo').length
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+// Return list of available templates for the frontend picker
+function getBoardTemplates(req, res) {
+  const list = Object.entries(BOARD_TEMPLATES).map(([key, val]) => ({
+    key,
+    label: val.label,
+    description: val.description,
+    taskCount: val.tasks.length
+  }));
+  res.status(200).json(list);
+}

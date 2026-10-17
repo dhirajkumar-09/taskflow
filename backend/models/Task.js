@@ -72,6 +72,21 @@ const taskSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     type: { type: String, default: 'like' },
     createdAt: { type: Date, default: Date.now }
+  }],
+  // Colored label tags (bug, feature, urgent, etc.) — set by leader
+  labels: [{
+    type: String,
+    trim: true,
+    maxlength: 30
+  }],
+  // Automatic audit trail — who changed what and when
+  activityLog: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    action: { type: String, required: true }, // 'created', 'updated', 'commented', 'attached'
+    field: { type: String, default: '' },     // which field changed
+    oldVal: { type: String, default: '' },
+    newVal: { type: String, default: '' },
+    at: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });
 module.exports = mongoose.model('Task', taskSchema);

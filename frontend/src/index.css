@@ -11,9 +11,27 @@
   --accent-hover: #7678f5;
   --success: #10b981;
   --danger: #f87171;
+  --warning: #f59e0b;
   --text: #f2f3f7;
   --text-muted: #8b93a7;
 }
+
+/* Light mode overrides — applied by adding class="light" to <html> */
+:root.light {
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f6;
+  --border: #d1d5e0;
+  --accent: #4f46e5;
+  --accent-2: #9333ea;
+  --accent-hover: #6366f1;
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --text: #111827;
+  --text-muted: #6b7280;
+}
+
 
 body {
   background: var(--bg);

@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = require('./app');
+const { startDeadlineScheduler } = require('./services/deadlineScheduler');
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,7 +20,10 @@ const io = new Server(server, {
 app.set('io', io);
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(() => {
+    console.log('MongoDB connected successfully');
+    startDeadlineScheduler(io);
+  })
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // Socket.io connection handling
