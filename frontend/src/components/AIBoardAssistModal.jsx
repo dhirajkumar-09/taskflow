@@ -47,7 +47,7 @@ function AIBoardAssistModal({ boardId, onClose }) {
                 <path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2zM19 14l.8 2.6L22 17.5l-2.2.9L19 21l-.8-2.6-2.2-.9 2.2-.9L19 14z" />
               </svg>
             </div>
-            <h2 className="font-display font-semibold text-lg text-white">AI Team Assistant</h2>
+            <h2 className="font-display font-semibold text-lg" style={{ color: 'var(--text)' }}>AI Team Assistant</h2>
           </div>
           <button onClick={onClose} className="shrink-0 p-1 rounded transition" style={{ color: 'var(--text-muted)' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">

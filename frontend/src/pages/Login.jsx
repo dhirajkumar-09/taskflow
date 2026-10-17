@@ -44,7 +44,7 @@ function Login() {
 
   return (
     <AuthLayout>
-      <h1 className="font-display text-3xl font-bold text-white mb-2 stagger-item">Welcome back</h1>
+      <h1 className="font-display text-3xl font-bold mb-2 stagger-item" style={{ color: 'var(--text)' }}>Welcome back</h1>
       <p className="mb-8 stagger-item delay-1" style={{ color: 'var(--text-muted)' }}>Log in to keep your boards moving</p>
 
       {error && (

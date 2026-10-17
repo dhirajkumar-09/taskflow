@@ -277,7 +277,8 @@ function TaskModal({ task, members, onClose, onSave, onDelete, isLeader, current
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             readOnly={!canEditDetails}
-            className="flex-1 bg-transparent outline-none font-display font-semibold text-xl text-white disabled:opacity-70"
+            className="flex-1 bg-transparent outline-none font-display font-semibold text-xl disabled:opacity-70"
+            style={{ color: 'var(--text)' }}
             placeholder="Task title"
           />
           <button onClick={onClose} className="shrink-0 p-1 rounded transition" style={{ color: 'var(--text-muted)' }}>

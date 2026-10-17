@@ -17,19 +17,29 @@
 }
 
 /* Light mode overrides — applied by adding class="light" to <html> */
-:root.light {
-  --bg: #f4f5f9;
+:root.light, html.light {
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface-2: #eef0f6;
-  --border: #d1d5e0;
+  --surface-2: #f1f5f9;
+  --border: #cbd5e1;
   --accent: #4f46e5;
   --accent-2: #9333ea;
-  --accent-hover: #6366f1;
+  --accent-hover: #4338ca;
   --success: #059669;
   --danger: #dc2626;
   --warning: #d97706;
-  --text: #111827;
-  --text-muted: #6b7280;
+  --text: #0f172a;
+  --text-muted: #475569;
+}
+
+:root.light .grid-pattern, html.light .grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.035) 1px, transparent 1px);
+}
+
+:root.light .glow-orb, html.light .glow-orb {
+  opacity: 0.12 !important;
 }
 
 

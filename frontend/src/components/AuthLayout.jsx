@@ -22,10 +22,10 @@ function AuthLayout({ children }) {
                 <div className="cube-face cube-face-bottom"></div>
               </div>
             </div>
-            <span className="font-display text-white text-lg font-semibold">TaskFlow</span>
+            <span className="font-display text-lg font-semibold" style={{ color: 'var(--text)' }}>TaskFlow</span>
           </div>
 
-          <h1 className="font-display text-4xl font-bold text-white leading-tight mb-4 stagger-item delay-1">
+          <h1 className="font-display text-4xl font-bold leading-tight mb-4 stagger-item delay-1" style={{ color: 'var(--text)' }}>
             Plan less.<br />
             <span className="gradient-text-animated">Ship more.</span>
           </h1>

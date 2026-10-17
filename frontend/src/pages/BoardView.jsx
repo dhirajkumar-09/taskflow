@@ -146,7 +146,7 @@ function TaskCard({ task, onDelete, onOpen, canDelete, onToggleComplete }) {
           )}
         </button>
 
-        <p className={`text-sm leading-snug flex-1 transition ${isDone ? 'line-through' : 'text-white'}`} style={{ color: isDone ? 'var(--text-muted)' : 'white' }}>
+        <p className={`text-sm leading-snug flex-1 transition ${isDone ? 'line-through' : ''}`} style={{ color: isDone ? 'var(--text-muted)' : 'var(--text)' }}>
           {task.title}
         </p>
       </div>

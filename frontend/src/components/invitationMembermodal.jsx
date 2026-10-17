@@ -44,7 +44,7 @@ function InviteMemberModal({ onClose, onInvite }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display font-semibold text-white text-lg mb-1">
+        <h3 className="font-display font-semibold text-lg mb-1" style={{ color: 'var(--text)' }}>
           Invite a teammate
         </h3>
 

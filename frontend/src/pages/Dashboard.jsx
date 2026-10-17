@@ -449,7 +449,7 @@ function Dashboard() {
                 <path d="M9 4v16M15 4v16M4 9h16M4 15h16" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
-            <p className="text-xl font-medium text-white mb-2 relative z-10">No boards yet</p>
+            <p className="text-xl font-medium mb-2 relative z-10" style={{ color: 'var(--text)' }}>No boards yet</p>
             <p className="relative z-10" style={{ color: 'var(--text-muted)' }}>Create one above to start organizing your work</p>
           </div>
         ) : visibleBoards.length === 0 ? (
@@ -460,7 +460,7 @@ function Dashboard() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
-            <p className="text-xl font-medium text-white mb-2">No matching boards</p>
+            <p className="text-xl font-medium mb-2" style={{ color: 'var(--text)' }}>No matching boards</p>
             <p style={{ color: 'var(--text-muted)' }}>Try a different search or clear the Favorites filter</p>
           </div>
         ) : (
@@ -507,11 +507,11 @@ function Dashboard() {
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.key === 'Enter' && handleRename(board._id)}
                           onBlur={() => handleRename(board._id)}
-                          className="w-full rounded-lg px-2 py-1 text-white outline-none mb-1.5 font-display font-semibold text-lg"
-                          style={{ background: 'var(--bg)', border: '1px solid var(--accent)' }}
+                          className="w-full rounded-lg px-2 py-1 outline-none mb-1.5 font-display font-semibold text-lg"
+                          style={{ background: 'var(--bg)', border: '1px solid var(--accent)', color: 'var(--text)' }}
                         />
                       ) : (
-                        <h3 className="font-display font-semibold text-lg text-white mb-1.5 truncate">{board.name}</h3>
+                        <h3 className="font-display font-semibold text-lg mb-1.5 truncate" style={{ color: 'var(--text)' }}>{board.name}</h3>
                       )}
                       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                         Created {new Date(board.createdAt).toLocaleDateString()}

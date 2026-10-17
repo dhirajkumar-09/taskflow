@@ -87,13 +87,13 @@ function Profile() {
 
       <nav
         className="sticky top-0 z-20 flex justify-between items-center px-8 py-4 fade-in-up"
-        style={{ background: 'rgba(6,8,15,0.7)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', animationDuration: '0.4s' }}
+        style={{ background: 'var(--surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', animationDuration: '0.4s' }}
       >
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-pulse" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
             <span className="font-display text-white text-sm font-bold">T</span>
           </div>
-          <span className="font-display text-white font-semibold text-lg">TaskFlow</span>
+          <span className="font-display font-semibold text-lg" style={{ color: 'var(--text)' }}>TaskFlow</span>
         </div>
         <button
           onClick={() => navigate('/dashboard')}

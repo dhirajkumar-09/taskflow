@@ -23,7 +23,7 @@ function TeamPanel({ people, tasks, onInvite, isOwner, currentUserId, onRemove }
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M17 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M10 10a4 4 0 100-8 4 4 0 000 8zM23 20v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <h3 className="font-display font-semibold text-white text-base">Team workload</h3>
+          <h3 className="font-display font-semibold text-base" style={{ color: 'var(--text)' }}>Team workload</h3>
         </div>
         {isOwner && (
           <button
@@ -51,7 +51,7 @@ function TeamPanel({ people, tasks, onInvite, isOwner, currentUserId, onRemove }
               <div className="flex items-center gap-2.5 mb-3">
                 <Avatar name={person.name} size={34} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white truncate flex items-center gap-1.5">
+                  <p className="text-sm font-medium truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
                     {person.name}
                     {person.isOwner ? (
                       <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0" style={{ background: 'rgba(168,85,247,0.15)', color: 'var(--accent-2)' }}>
@@ -108,7 +108,7 @@ function TeamPanel({ people, tasks, onInvite, isOwner, currentUserId, onRemove }
             style={{ background: 'var(--surface-2)', border: '1px dashed var(--border)' }}
           >
             <Avatar name="" size={34} />
-            <p className="text-sm font-medium text-white mt-2">Unassigned</p>
+            <p className="text-sm font-medium mt-2" style={{ color: 'var(--text)' }}>Unassigned</p>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{unassignedCount} task{unassignedCount > 1 ? 's' : ''} up for grabs</p>
           </div>
         )}

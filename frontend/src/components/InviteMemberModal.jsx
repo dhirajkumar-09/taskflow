@@ -31,7 +31,7 @@ function InviteMemberModal({ onClose, onInvite }) {
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display font-semibold text-white text-lg mb-1">Invite a teammate</h3>
+        <h3 className="font-display font-semibold text-lg mb-1" style={{ color: 'var(--text)' }}>Invite a teammate</h3>
         <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
           They need an existing TaskFlow account. We'll send them a request — they'll join once they accept it.
         </p>

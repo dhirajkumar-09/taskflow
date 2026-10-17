@@ -69,7 +69,7 @@ export default function BoardAnalyticsModal({ board, tasks, members, onClose }) 
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">📊</span>
-              <h2 className="font-display text-xl font-bold text-white">Board Analytics</h2>
+              <h2 className="font-display text-xl font-bold" style={{ color: 'var(--text)' }}>Board Analytics</h2>
             </div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Real-time progress, workload balancing &amp; member performance for {board?.name}
@@ -97,7 +97,7 @@ export default function BoardAnalyticsModal({ board, tasks, members, onClose }) 
           </div>
           <div className="rounded-xl p-3.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <span className="text-[11px] block mb-1" style={{ color: 'var(--text-muted)' }}>Total Tasks</span>
-            <span className="font-display text-2xl font-bold text-white">{stats.total}</span>
+            <span className="font-display text-2xl font-bold" style={{ color: 'var(--text)' }}>{stats.total}</span>
             <span className="text-[10px] block mt-1" style={{ color: 'var(--text-muted)' }}>{stats.done} completed</span>
           </div>
           <div className="rounded-xl p-3.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
@@ -124,15 +124,15 @@ export default function BoardAnalyticsModal({ board, tasks, members, onClose }) 
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-lg p-2.5" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>
               <span className="text-xs font-bold text-red-400 block mb-0.5">🔥 High</span>
-              <span className="text-lg font-bold text-white">{stats.high}</span>
+              <span className="text-lg font-bold" style={{ color: 'var(--text)' }}>{stats.high}</span>
             </div>
             <div className="rounded-lg p-2.5" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}>
               <span className="text-xs font-bold text-amber-400 block mb-0.5">⚡ Medium</span>
-              <span className="text-lg font-bold text-white">{stats.medium}</span>
+              <span className="text-lg font-bold" style={{ color: 'var(--text)' }}>{stats.medium}</span>
             </div>
             <div className="rounded-lg p-2.5" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)' }}>
               <span className="text-xs font-bold text-indigo-400 block mb-0.5">🌱 Low</span>
-              <span className="text-lg font-bold text-white">{stats.low}</span>
+              <span className="text-lg font-bold" style={{ color: 'var(--text)' }}>{stats.low}</span>
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function BoardAnalyticsModal({ board, tasks, members, onClose }) 
                 <Avatar name={m.name} size={32} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-white truncate">{m.name}</span>
+                    <span className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{m.name}</span>
                     <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                       {m.done}/{m.total} completed ({m.rate}%)
                     </span>

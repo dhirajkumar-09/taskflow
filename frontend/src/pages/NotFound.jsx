@@ -7,7 +7,7 @@ function NotFound() {
         <h1 className="font-display text-7xl font-bold mb-4" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           404
         </h1>
-        <p className="text-lg text-white mb-2">This page doesn't exist</p>
+        <p className="text-lg mb-2" style={{ color: 'var(--text)' }}>This page doesn't exist</p>
         <p className="mb-8" style={{ color: 'var(--text-muted)' }}>
           The board you're looking for may have been moved or deleted.
         </p>

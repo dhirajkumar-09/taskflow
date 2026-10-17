@@ -58,7 +58,7 @@ function Signup() {
 
   return (
     <AuthLayout>
-      <h1 className="font-display text-3xl font-bold text-white mb-2 stagger-item">Create your account</h1>
+      <h1 className="font-display text-3xl font-bold mb-2 stagger-item" style={{ color: 'var(--text)' }}>Create your account</h1>
       <p className="mb-8 stagger-item delay-1" style={{ color: 'var(--text-muted)' }}>Start organizing your work with TaskFlow</p>
 
       {error && (
