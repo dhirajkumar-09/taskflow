@@ -13,6 +13,13 @@ const protect = require('./middleware/authMiddleware');
 const app = express();
 
 app.use(cors());
+// Normalize multiple consecutive slashes in request URL (e.g. //api/boards -> /api/boards)
+app.use((req, res, next) => {
+  if (req.url && req.url.includes('//')) {
+    req.url = req.url.replace(/\/+/g, '/');
+  }
+  next();
+});
 // Raised limit so task attachments (sent as base64 JSON) can go through;
 // files themselves are still capped per-file in the task controller.
 app.use(express.json({ limit: '15mb' }));

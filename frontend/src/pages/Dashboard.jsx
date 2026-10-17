@@ -104,8 +104,9 @@ function Dashboard() {
     try {
       const res = await authFetch('/api/boards');
       const data = await res.json();
-      setBoards(data);
+      setBoards(Array.isArray(data) ? data : []);
     } catch (err) {
+      setBoards([]);
       if (err.message !== 'Session expired') setError('Failed to load boards');
     } finally {
       setLoading(false);
