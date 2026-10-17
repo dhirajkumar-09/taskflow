@@ -18,6 +18,9 @@ import TaskModal from '../components/TaskModal';
 import AIBoardAssistModal from '../components/AIBoardAssistModal';
 import FilterBar from '../components/FilterBar';
 import CalendarView from '../components/CalendarView';
+import ThemeToggle from '../components/ThemeToggle';
+import BoardAnalyticsModal from '../components/BoardAnalyticsModal';
+import { exportCSV, exportPDF } from '../utils/export';
 
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: '#8b93a7' },
@@ -261,6 +264,10 @@ function BoardView() {
   // Search / filter state
   const [filters, setFilters] = useState({ search: '', priority: '', assignee: '', labels: [] });
 
+  // Modals & Export dropdown
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
   // Require a small pointer movement before dnd-kit treats it as a drag.
   // Without this, every click is first evaluated as a potential drag,
   // which is what made the task modal feel slow to open.
@@ -493,10 +500,16 @@ function BoardView() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <nav className="flex justify-between items-center px-8 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+      <nav
+        className="sticky top-0 z-30 flex justify-between items-center px-8 py-3.5 transition-colors"
+        style={{
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)'
+        }}
+      >
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-sm flex items-center gap-1.5 transition"
+          className="text-sm flex items-center gap-1.5 transition hover:opacity-80"
           style={{ color: 'var(--text-muted)' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -504,11 +517,14 @@ function BoardView() {
           </svg>
           Boards
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
-            <span className="font-display text-white text-xs font-bold">T</span>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center glow-pulse" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
+              <span className="font-display text-white text-xs font-bold">T</span>
+            </div>
+            <span className="font-display text-sm font-semibold" style={{ color: 'var(--text)' }}>TaskFlow</span>
           </div>
-          <span className="font-display text-white text-sm font-semibold">TaskFlow</span>
         </div>
       </nav>
 
@@ -518,7 +534,7 @@ function BoardView() {
             className="rounded-2xl p-8 text-center"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
           >
-            <p className="text-lg font-semibold text-white mb-2">Can't open this board</p>
+            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>Can't open this board</p>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{error}</p>
           </div>
         )}
@@ -527,12 +543,12 @@ function BoardView() {
         <>
         <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white mb-1">{board ? board.name : 'Loading...'}</h1>
+            <h1 className="font-display text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{board ? board.name : 'Loading...'}</h1>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               {people.length} member{people.length !== 1 ? 's' : ''} · {tasks.length} task{tasks.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {/* View toggle */}
             <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <button
@@ -563,32 +579,81 @@ function BoardView() {
               </button>
             </div>
 
+            {/* Analytics Button */}
+            <button
+              onClick={() => setAnalyticsOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl transition hover:opacity-90"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              title="View board analytics & performance"
+            >
+              <span>📊</span>
+              Analytics
+            </button>
+
+            {/* Export Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl transition hover:opacity-90"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                title="Export board data"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export
+              </button>
+              {exportOpen && (
+                <div
+                  className="absolute right-0 mt-1.5 w-36 rounded-xl py-1 z-40 shadow-2xl"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                >
+                  <button
+                    onClick={() => { exportPDF(filteredTasks, board?.name); setExportOpen(false); }}
+                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-white/5 transition"
+                    style={{ color: 'var(--text)' }}
+                  >
+                    <span>📄</span> PDF Report
+                  </button>
+                  <button
+                    onClick={() => { exportCSV(filteredTasks, board?.name); setExportOpen(false); }}
+                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-white/5 transition"
+                    style={{ color: 'var(--text)' }}
+                  >
+                    <span>📊</span> Excel / CSV
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setAiAssistOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-full transition shrink-0"
-              style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--accent)' }}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl transition shrink-0"
+              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: 'var(--accent)' }}
               title="Ask AI how to finish this board faster"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2zM19 14l.8 2.6L22 17.5l-2.2.9L19 21l-.8-2.6-2.2-.9 2.2-.9L19 14z" />
               </svg>
-              AI Team Assistant
+              AI Assist
             </button>
-          <div className="flex items-center -space-x-2.5">
-            {people.slice(0, 6).map((p) => <Avatar key={p._id} name={p.name} size={36} ring title={p.name} />)}
-            {isOwner && (
-              <button
-                onClick={() => setInviteOpen(true)}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition shrink-0"
-                style={{ background: 'var(--surface-2)', border: '1.5px dashed var(--border)', color: 'var(--text-muted)', boxShadow: '0 0 0 2px var(--bg)' }}
-                title="Invite a member"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
-          </div>
+            <div className="flex items-center -space-x-2.5 ml-1">
+              {people.slice(0, 6).map((p) => <Avatar key={p._id} name={p.name} size={36} ring title={p.name} />)}
+              {isOwner && (
+                <button
+                  onClick={() => setInviteOpen(true)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition shrink-0"
+                  style={{ background: 'var(--surface-2)', border: '1.5px dashed var(--border)', color: 'var(--text-muted)', boxShadow: '0 0 0 2px var(--bg)' }}
+                  title="Invite a member"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -695,6 +760,7 @@ function BoardView() {
 
       {board && inviteOpen && <InviteMemberModal onClose={() => setInviteOpen(false)} onInvite={handleInvite} />}
       {board && aiAssistOpen && <AIBoardAssistModal boardId={id} onClose={() => setAiAssistOpen(false)} />}
+      {board && analyticsOpen && <BoardAnalyticsModal board={board} tasks={tasks} members={people} onClose={() => setAnalyticsOpen(false)} />}
       {board && activeTask && (
         <TaskModal
           task={activeTask}

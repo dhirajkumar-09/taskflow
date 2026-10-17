@@ -1,30 +1,31 @@
 import { Link } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 
 const FEATURES = [
   {
     title: 'Real-time sync',
-    desc: 'Every change appears instantly for everyone on the board, no refresh needed.',
+    desc: 'Every change appears instantly for everyone on the board via WebSockets, no refresh needed.',
     icon: (
       <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" fill="none"/>
     )
   },
   {
-    title: 'Drag and drop',
-    desc: 'Move tasks between To Do, In Progress and Done with a simple drag.',
+    title: 'AI Team Assistant',
+    desc: 'Break tasks into actionable checklists and get intelligent workload recommendations powered by Gemini.',
     icon: (
-      <path d="M9 4v16M15 4v16M4 9h16M4 15h16" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2zM19 14l.8 2.6L22 17.5l-2.2.9L19 21l-.8-2.6-2.2-.9 2.2-.9L19 14z" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" fill="none"/>
     )
   },
   {
-    title: 'Secure by default',
-    desc: 'Encrypted passwords, token-based sessions, and strict ownership checks.',
+    title: 'Smart Analytics & Export',
+    desc: 'Track team velocity, priority distributions, and export one-click PDF & Excel reports.',
     icon: (
-      <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinejoin="round" fill="none"/>
+      <path d="M18 20V10M12 20V4M6 20v-6" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
     )
   },
   {
     title: 'Built for teams',
-    desc: 'Invite members, assign tasks, and see who is working on what at a glance.',
+    desc: 'Invite members, assign tasks, collaborate on comments, and audit full change history.',
     icon: (
       <path d="M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M12 11a4 4 0 100-8 4 4 0 000 8zM23 20v-1a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="var(--accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     )
@@ -90,9 +91,10 @@ function Home() {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-pulse" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
             <span className="font-display text-white text-sm font-bold">T</span>
           </div>
-          <span className="font-display text-white font-semibold text-lg">TaskFlow</span>
+          <span className="font-display font-semibold text-lg" style={{ color: 'var(--text)' }}>TaskFlow</span>
         </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             to="/login"
             className="text-sm px-4 py-2 rounded-lg transition-colors animated-underline"
@@ -113,14 +115,14 @@ function Home() {
       {/* ===== Hero ===== */}
       <div className="relative z-10 max-w-3xl mx-auto text-center px-6 pt-16 pb-10">
         <div
-          className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-6 stagger-item"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+          className="inline-flex items-center gap-2 text-xs px-3.5 py-1.5 rounded-full mb-6 stagger-item font-medium"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
         >
           <span className="w-1.5 h-1.5 rounded-full glow-pulse" style={{ background: 'var(--success)' }}></span>
-          Built with React, Node.js, MongoDB &amp; Socket.io
+          ⚡ AI-Powered Real-Time Collaborative Workspace
         </div>
 
-        <h1 className="font-display text-5xl sm:text-7xl font-bold text-white leading-[1.05] mb-6 stagger-item delay-1">
+        <h1 className="font-display text-5xl sm:text-7xl font-bold leading-[1.05] mb-6 stagger-item delay-1" style={{ color: 'var(--text)' }}>
           Plan less.<br />
           <span className="gradient-text-animated">Ship more.</span>
         </h1>
@@ -155,7 +157,7 @@ function Home() {
 
       {/* ===== Feature grid ===== */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 pb-8">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-white text-center mb-2 stagger-item">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-2 stagger-item" style={{ color: 'var(--text)' }}>
           Everything you need, nothing you don't
         </h2>
         <p className="text-center mb-12 stagger-item delay-1" style={{ color: 'var(--text-muted)' }}>
@@ -180,7 +182,7 @@ function Home() {
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">{f.icon}</svg>
               </div>
-              <h3 className="font-display font-semibold text-white mb-1.5 relative z-10">{f.title}</h3>
+              <h3 className="font-display font-semibold mb-1.5 relative z-10" style={{ color: 'var(--text)' }}>{f.title}</h3>
               <p className="text-sm relative z-10" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
             </div>
           ))}
@@ -194,7 +196,7 @@ function Home() {
           style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.14), rgba(168,85,247,0.14))', border: '1px solid var(--border)' }}
         >
           <div className="glow-orb floaty absolute -top-24 -left-16 w-64 h-64 pointer-events-none" style={{ opacity: 0.25 }}></div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mb-3 relative z-10">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold mb-3 relative z-10" style={{ color: 'var(--text)' }}>
             Ready to organize your team?
           </h2>
           <p className="mb-8 max-w-md mx-auto relative z-10" style={{ color: 'var(--text-muted)' }}>
