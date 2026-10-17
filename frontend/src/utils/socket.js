@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 // One shared socket connection for the whole app.
-export const socket = io(import.meta.env.VITE_API_URL);
+export const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
 // Joins the logged-in user's personal notification room so the server
 // can push things like invitation requests straight to them, even if
