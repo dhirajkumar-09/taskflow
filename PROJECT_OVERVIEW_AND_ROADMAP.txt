@@ -1,0 +1,334 @@
+================================================================================
+           TASKFLOW - AI-POWERED REAL-TIME COLLABORATIVE WORKSPACE
+                   COMPLETE PROJECT OVERVIEW & ROADMAP
+================================================================================
+
+TABLE OF CONTENTS:
+1. Executive Project Overview
+2. Complete Tech Stack & Tools Breakdown
+3. Development Timeline: What Was Built (From Start to Present)
+4. System Architecture & Technical Specifications
+   - Database Schemas (MongoDB)
+   - REST API Endpoints
+   - WebSocket Events (Socket.io)
+   - Frontend Structure & Pages
+5. 9-Month Course Integration Roadmap (What You Will Implement in Course)
+   - LangChain, Ollama & RAG System
+   - Guardrails & Evaluation
+   - Docker & Kubernetes Containerization
+   - SQL / PostgreSQL Hybrid Layer
+   - WebRTC Live Standup Huddles
+   - AWS Cloud Deployment & CI/CD
+6. Interview Guide & Placement Pitch
+   - 30-Second Elevator Pitch
+   - Deep-Dive Technical Interview Answers
+   - Resume Bullet Points
+7. How to Run & Verify the Project Locally
+
+================================================================================
+1. EXECUTIVE PROJECT OVERVIEW
+================================================================================
+Project Name   : TaskFlow
+Repository     : https://github.com/dhirajkumar-09/taskflow.git
+Type           : Full-Stack Real-Time Project Management & Collaboration Platform
+Inspiration    : Linear, Trello, Jira
+Core Value     : Allows distributed engineering teams to plan, track, and complete
+                 work in real time with interactive Kanban drag-and-drop, role-based
+                 access control (Leaders vs Members), live presence sync, Gemini AI
+                 task breakdown, performance analytics, and one-click data export.
+
+================================================================================
+2. COMPLETE TECH STACK & TOOLS BREAKDOWN
+================================================================================
+FRONTEND:
+  * React.js (v18+) with Vite for lightning-fast HMR builds
+  * Tailwind CSS (v4) with custom glassmorphism, responsive tokens, and animations
+  * @dnd-kit (Core, Sortable, Utilities) for accessible 60fps drag & drop
+  * Socket.io-client for bidirectional real-time state synchronization
+  * React Router DOM (v6) for protected client-side routing
+  * Canvas-Confetti for celebratory micro-interactions upon task completion
+  * Custom Dark / Light Mode Engine powered by dynamic CSS root variables
+
+BACKEND:
+  * Node.js & Express.js for RESTful API architecture
+  * Socket.io (WebSocket engine) for event-driven live broadcasts
+  * MongoDB Atlas & Mongoose ODM for document persistence and indexing
+  * JSON Web Tokens (JWT) & BcryptJS for secure stateless authentication
+  * Express-Rate-Limit for brute-force and DDoS API protection
+  * Multer for handling file uploads (documents, screenshots, attachments)
+  * Jest & Supertest for backend unit and integration test suites
+
+ARTIFICIAL INTELLIGENCE:
+  * Google Gemini API (@google/genai SDK)
+  * Task Breakdown Controller: Generates 5-to-7-step actionable checklists
+  * Board Assist Controller: Recommends priority ordering and team rebalancing
+
+DEV TOOLS & VERSION CONTROL:
+  * Git & GitHub for feature branches, commit history, and remote collaboration
+  * Postman / REST Client for endpoint verification
+  * Vite Development Server & Nodemon for continuous local development
+
+================================================================================
+3. DEVELOPMENT TIMELINE: WHAT WAS BUILT (FROM START TO PRESENT)
+================================================================================
+
+--- PHASE 1: Initial Foundation (Basic CRUD & Authentication) ---
+  * Set up Node.js / Express backend with MongoDB Atlas database connection.
+  * Created User authentication system: Sign Up, Log In, JWT token generation,
+    and password hashing with bcryptjs.
+  * Basic Board schema (name, owner, members) and Task schema (title, status, priority).
+  * Protected API routes via authMiddleware verifying Bearer JWT tokens.
+
+--- PHASE 2: Team Collaboration, Real-Time WebSockets & Invites ---
+  * Converted single-user board into a multi-member collaborative workspace.
+  * Built Socket.io event architecture: users join board rooms, task creation,
+    updates, and deletes broadcast instantly to all members without page refresh.
+  * Built team invitation system: Board Leaders send email invites; teammates
+    receive alerts in an interactive dropdown bell to Accept or Decline.
+  * Built notification center: Informs assignees when tasks are assigned,
+    updated, or when team members join.
+  * Dynamic Avatar generator: Produces unique initials and color gradients.
+
+--- PHASE 3: Interactive Kanban Engine & Role Permissions ---
+  * Upgraded task management into a fluid Drag & Drop Kanban board with
+    @dnd-kit across "To Do", "In Progress", and "Done" columns.
+  * Added 1-Click completion checkboxes directly on task cards.
+  * Automatic progress synchronization: Moving cards between columns
+    automatically updates completion percentages (0% -> 50% -> 100%).
+  * Role-Based Access Control (RBAC):
+    - Leader (Owner): Can rename/delete boards, set deadlines, assign tasks,
+      and remove members.
+    - Member: Can create collaborative tasks, update progress notes, complete
+      sub-items, and upload attachments.
+  * File Attachments: Enabled uploading and downloading task documents and images.
+
+--- PHASE 4: Executive Dashboard, Search, Favorites & Calendar ---
+  * Modern Dashboard with 3D card tilt physics and aggregate metrics:
+    Total Boards, Total Tasks, Completion Rate %, and Active Tasks.
+  * Instant Search & Filter Bar: Filter tasks by assignee, priority, status,
+    and search boards by name.
+  * Board Bookmarking: 1-click Favorite starring that pins important boards to top.
+  * Interactive Calendar View: Monthly calendar grid mapping tasks to due dates,
+    featuring overdue warning badges.
+  * Editable User Profile: Update display name, college/institution, and department.
+
+--- PHASE 5: Productivity, AI, Analytics & UI Polish (Current State) ---
+  * Gemini AI Integration:
+    - Task Checklist Breakdown: Breaks large tasks into manageable steps.
+    - Board Assist: Evaluates team workload and suggests priority ordering.
+  * 1-Click Quick-Start Board Templates:
+    - 🚀 Sprint Board (2-week Agile sprint with Backlog, QA, and Review)
+    - 🐛 Bug Tracker (Severity triage and bug tracking)
+    - 📅 Content Calendar (Editorial, video, and social pipeline)
+    - 🎯 Project Roadmap (Milestone and release tracking)
+  * Visual Board Analytics Modal: Live charts for completion rate %,
+    priority distribution (High, Medium, Low), overdue counters, and
+    member-by-member workload bars.
+  * One-Click Data Export: Instant client-side generation of PDF project reports
+    and Excel / CSV spreadsheets.
+  * Smooth Dark / Light Mode Toggle: Instant theme switcher with WCAG AA
+    compliant typography and contrast across all pages.
+
+================================================================================
+4. SYSTEM ARCHITECTURE & TECHNICAL SPECIFICATIONS
+================================================================================
+
+DATABASE SCHEMAS (MONGODB / MONGOOSE):
+  1. User Schema:
+     - name, email, password, college, department, timestamps
+  2. Board Schema:
+     - name, owner (ref: User), members (refs: User), isFavorite, timestamps
+  3. Task Schema:
+     - board (ref: Board), title, description, status ('todo','in-progress','done')
+     - priority ('low','medium','high'), dueDate, assignee (ref: User)
+     - progress (0-100), progressNote, attachments (file uploads)
+     - subtasks (title, completed), comments (user, text, createdAt)
+     - activityLog (action, user, at, details)
+  4. Invitation Schema:
+     - board (ref: Board), invitedBy (ref: User), recipientEmail
+     - status ('pending','accepted','declined'), createdAt
+  5. Notification Schema:
+     - user (ref: User), type, message, board (ref: Board), read, createdAt
+
+REST API ENDPOINTS:
+  * Auth Routes:
+    - POST /api/auth/signup         : Register new user
+    - POST /api/auth/login          : Authenticate and return JWT token
+    - GET  /api/auth/profile        : Retrieve current user profile
+    - PUT  /api/auth/profile        : Update name, college, department
+  * Board Routes:
+    - GET    /api/boards            : Fetch all boards for logged-in user
+    - POST   /api/boards            : Create custom board or pre-seeded template
+    - GET    /api/boards/:id        : Fetch single board with populated members
+    - PUT    /api/boards/:id        : Rename board (Leader only)
+    - DELETE /api/boards/:id        : Delete board (Leader only)
+    - PATCH  /api/boards/:id/favorite : Toggle favorite bookmark
+    - GET    /api/boards/stats      : Aggregate statistics across all boards
+  * Task Routes:
+    - GET    /api/tasks/:boardId    : Get all tasks for a board
+    - POST   /api/tasks             : Create task (Leader or Member)
+    - PUT    /api/tasks/:id         : Update task status, priority, progress
+    - DELETE /api/tasks/:id         : Delete task (Leader only)
+    - POST   /api/tasks/:id/attachments : Upload task files (Multer)
+    - POST   /api/tasks/:id/comments    : Add team discussion comment
+  * Invitation Routes:
+    - POST   /api/invitations/send     : Send board invite by email
+    - GET    /api/invitations/my       : Fetch pending invites for user
+    - POST   /api/invitations/:id/respond : Accept or decline invitation
+  * AI Routes:
+    - POST   /api/ai/breakdown         : Generate checklist steps for a task
+    - GET    /api/ai/board-assist/:id  : Analyze whole board workload via Gemini
+
+WEBSOCKET EVENTS (SOCKET.IO):
+  * 'join-board'   : Client joins board room channel
+  * 'leave-board'  : Client leaves board room channel
+  * 'task-created' : Broadcasts newly created task to all room members
+  * 'task-updated' : Broadcasts task edits, progress changes, column drag & drop
+  * 'task-deleted' : Broadcasts task deletion across all clients
+
+================================================================================
+5. 9-MONTH COURSE INTEGRATION ROADMAP (APNA COLLEGE AI FULL STACK)
+================================================================================
+
+Here is the exact step-by-step plan to integrate every concept you learn into
+TaskFlow, transforming it into an elite placement portfolio project:
+
+[MODULE 1: Advanced Full-Stack Web Development (MERN)]
+  * Goal: Production-level scalability and security.
+  * What to implement in TaskFlow:
+    1. Redis Caching: Cache boards and aggregate stats in Redis so frequent reads
+       take < 5ms instead of querying MongoDB Atlas repeatedly.
+    2. HTTP-Only Cookie Refresh Tokens: Implement silent token refreshes with
+       short-lived access tokens (15m) and secure refresh tokens in cookies.
+    3. Pagination & Infinite Scroll: Add cursor-based pagination for boards
+       with hundreds of tasks.
+
+[MODULE 2: AI Integrated Development (LangChain, Ollama, RAG, HuggingFace)]
+  * Goal: Turn TaskFlow into a true AI-first application.
+  * What to implement in TaskFlow:
+    1. "Chat with Your Project" (RAG System):
+       - Use LangChain + Vector DB (Pinecone, ChromaDB, or pgvector).
+       - Chunk and embed all project tasks, uploaded PDFs, and member comments.
+       - Team members can ask in natural language:
+         "What did the frontend team build yesterday?"
+         "Are there any blockers reported in the payment module?"
+    2. Local Offline LLM with Ollama:
+       - Run Llama 3 or Mistral locally via Ollama.
+       - Users can choose between "Cloud AI (Gemini)" or "Local Private AI (Ollama)"
+         which costs $0 and keeps corporate data confidential.
+    3. AI Auto-Assigner & Smart Story Point Estimator:
+       - Use HuggingFace embeddings to match incoming bug reports to the team member
+         who solved similar code tasks in the past.
+
+[MODULE 3: AI Guardrails & Evaluation]
+  * Goal: Safe, enterprise-grade AI execution.
+  * What to implement in TaskFlow:
+    1. NeMo Guardrails / Llama Guard: Prevent prompt injections and ensure AI
+       outputs stay professional and strictly focused on project management.
+    2. Automated Evals: Benchmark checklist generation quality using LangSmith or
+       DeepEval to prevent hallucinations in task instructions.
+
+[MODULE 4: Complete SQL & Hybrid Database Architecture]
+  * Goal: Master both NoSQL and Relational paradigms.
+  * What to implement in TaskFlow:
+    1. Hybrid Storage Architecture:
+       - Keep dynamic task cards and JSON logs in MongoDB.
+       - Build an Enterprise Audit Log & Billing / Subscription service in PostgreSQL
+         using Prisma ORM or Drizzle ORM.
+       - In interviews, explain why: "Postgres guarantees ACID transactions for
+         payments and audit compliance, while MongoDB offers schema flexibility
+         for customizable Kanban task metadata."
+
+[MODULE 5: WebRTC (Real-Time Audio / Video Standups)]
+  * Goal: Advanced media streaming.
+  * What to implement in TaskFlow:
+    1. "1-Click Daily Standup" Huddle:
+       - Add a "Start Standup" button on the board navbar.
+       - Use WebRTC peer connections (with Simple-Peer or PeerJS) for low-latency
+         mesh video/audio calls right inside the board, replacing Google Meet for quick syncs.
+
+[MODULE 6: Docker, Kubernetes & AWS Deployment]
+  * Goal: Cloud-native DevOps engineering.
+  * What to implement in TaskFlow:
+    1. Docker Containerization:
+       - Multi-stage Dockerfile for React frontend (Nginx reverse proxy).
+       - Dockerfile for Node.js backend.
+       - `docker-compose.yml` orchestrating Frontend, Backend, MongoDB, Redis, and Ollama.
+    2. Kubernetes (K8s):
+       - Kubernetes deployment manifests (`deployment.yaml`, `service.yaml`, `ingress.yaml`).
+       - Horizontal Pod Autoscaler (HPA) to scale backend pods when WebSocket traffic surges.
+    3. AWS Production Hosting:
+       - Store task attachment uploads in AWS S3 with signed URLs.
+       - Deploy backend containers on AWS ECS (Elastic Container Service) or EC2.
+       - Automate CI/CD pipeline with GitHub Actions (Run tests -> Build Docker -> Deploy).
+
+================================================================================
+6. INTERVIEW GUIDE & PLACEMENT PITCH
+================================================================================
+
+--- 30-SECOND ELEVATOR PITCH ---
+"I developed TaskFlow, an AI-powered real-time collaborative workspace designed
+for high-velocity engineering teams, inspired by modern tools like Linear and Trello.
+The stack is built on Node.js, Express, MongoDB, and React with Vite and Tailwind.
+It features sub-second multi-user synchronization via Socket.io, fluid Kanban drag-and-drop,
+role-based permissions for Leaders and Members, and Gemini AI integration for
+automatic task breakdown and workload rebalancing. It also includes live analytics,
+PDF/CSV reporting, and a full dark/light theme system."
+
+--- HOW TO ANSWER: "WHAT WAS THE HARDEST TECHNICAL CHALLENGE?" ---
+"The most challenging part was ensuring state synchronization between real-time
+WebSocket broadcasts and local drag-and-drop interactions. When a user drags a
+card across columns, we apply optimistic UI updates for instant 60fps responsiveness,
+while debouncing backend updates to sync column status, progress percentages, and
+broadcasting the mutation to other room members without triggering race conditions
+or flickering. We solved this by using room-isolated Socket.io events and structured
+state reconciliation in React."
+
+--- RESUME BULLET POINTS (COPY & PASTE TO YOUR RESUME) ---
+* Engineered TaskFlow, a real-time collaborative Kanban management platform
+  supporting multi-user state synchronization using React, Node.js, MongoDB, and Socket.io.
+* Integrated Google Gemini AI to automate agile task decomposition into actionable checklists
+  and compute algorithmic workload rebalancing across team members.
+* Built interactive 60fps drag-and-drop workflows using @dnd-kit, automatically synchronizing
+  task progress percentages (0%, 50%, 100%) and column states.
+* Implemented Role-Based Access Control (RBAC) separating Leader and Member permissions,
+  secure JWT authentication, and Express rate limiting to prevent API abuse.
+* Designed an executive dashboard with 3D micro-interactions, live search/filtering,
+  overdue task calendar mapping, visual analytics modals, and one-click PDF/CSV export.
+
+================================================================================
+7. HOW TO RUN & VERIFY THE PROJECT LOCALLY
+================================================================================
+
+PREREQUISITES:
+  - Node.js (v18+)
+  - MongoDB Atlas connection string (or local MongoDB on port 27017)
+  - Gemini API Key (Optional, for AI features)
+
+STEPS TO START:
+
+1. Backend Server:
+   cd backend
+   npm install
+   npm run dev
+   --> Server runs on: http://localhost:5000 (Connected to MongoDB & Socket.io)
+
+2. Frontend Client:
+   cd frontend
+   npm install
+   npm run dev
+   --> App runs on: http://localhost:5173
+
+3. Run Tests:
+   cd backend
+   npm test
+
+4. Build for Production:
+   cd frontend
+   npm run build
+   --> Verified: Clean bundle build with 0 errors in ~1.1s.
+
+================================================================================
+FILE CREATED: PROJECT_OVERVIEW_AND_ROADMAP.txt
+All rights reserved © Dhiraj Kumar | TaskFlow Engineering Portfolio
+================================================================================
