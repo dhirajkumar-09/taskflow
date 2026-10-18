@@ -247,18 +247,20 @@ function Dashboard() {
           </div>
           <span className="font-display font-semibold text-lg" style={{ color: 'var(--text)' }}>TaskFlow</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
+          <div className="h-5 w-[1px] mx-0.5" style={{ background: 'var(--border)' }} />
           <NotificationsBell />
           <InvitationsBell onAccepted={fetchBoards} />
-         <button
-  onClick={() => navigate('/profile')}
-  title="Edit profile"
-  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 transition-transform duration-200 hover:scale-110"
-  style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
->
-  {initials(user.name)}
-</button>
+          <div className="h-5 w-[1px] mx-0.5" style={{ background: 'var(--border)' }} />
+          <button
+            onClick={() => navigate('/profile')}
+            title="Edit profile"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 transition-transform duration-200 hover:scale-110"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', boxShadow: '0 0 0 2px var(--bg), 0 0 0 3px var(--border)' }}
+          >
+            {initials(user.name)}
+          </button>
           <button
             onClick={handleLogout}
             className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
