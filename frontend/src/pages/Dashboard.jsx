@@ -76,12 +76,7 @@ function getGreeting() {
   return 'Good evening';
 }
 
-const QUICK_TEMPLATES = [
-  { key: 'sprint', icon: '🚀', label: 'Sprint Board', desc: 'Agile 2-week sprint with QA & review' },
-  { key: 'bugTracker', icon: '🐛', label: 'Bug Tracker', desc: 'Triage, reproduce, and squash bugs' },
-  { key: 'contentCalendar', icon: '📅', label: 'Content Calendar', desc: 'Plan blogs, videos & social posts' },
-  { key: 'projectRoadmap', icon: '🎯', label: 'Project Roadmap', desc: 'Milestones, architecture & release' },
-];
+
 
 function Dashboard() {
   const [boards, setBoards] = useState([]);
@@ -150,24 +145,6 @@ function Dashboard() {
       fetchStats();
     } catch (err) {
       if (err.message !== 'Session expired') setError('Failed to create board');
-    }
-  };
-
-  const handleCreateTemplateBoard = async (templateKey, templateLabel) => {
-    try {
-      const res = await authFetch('/api/boards', {
-        method: 'POST',
-        body: JSON.stringify({ name: templateLabel, template: templateKey })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to create template board');
-      fetchBoards();
-      fetchStats();
-      if (data.board?._id) {
-        navigate(`/board/${data.board._id}`);
-      }
-    } catch (err) {
-      if (err.message !== 'Session expired') setError(err.message || 'Failed to create template board');
     }
   };
 
@@ -332,46 +309,12 @@ function Dashboard() {
             />
           </div>
         )}
-
-        {/* Quick Starter Templates */}
-        <div className="mb-8 stagger-item delay-2">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-              <span>✨</span> Quick Start Templates
-            </span>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>1-click pre-built boards</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {QUICK_TEMPLATES.map((tmpl) => (
-              <button
-                key={tmpl.key}
-                type="button"
-                onClick={() => handleCreateTemplateBoard(tmpl.key, tmpl.label)}
-                className="text-left rounded-xl p-3.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg group"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)'
-                }}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-2xl group-hover:scale-110 transition-transform">{tmpl.icon}</span>
-                  <span className="text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--accent)' }}>
-                    Launch →
-                  </span>
-                </div>
-                <h4 className="font-semibold text-xs mb-0.5 truncate" style={{ color: 'var(--text)' }}>{tmpl.label}</h4>
-                <p className="text-[11px] line-clamp-1" style={{ color: 'var(--text-muted)' }}>{tmpl.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
         <form onSubmit={handleCreateBoard} className="flex gap-3 mb-6">
           <input
             type="text"
             value={newBoardName}
             onChange={(e) => setNewBoardName(e.target.value)}
-            placeholder="Or name a blank custom board..."
+            placeholder="Create a new board (e.g. My Project)..."
             className="flex-1 rounded-xl px-4 py-3 outline-none transition"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
             onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)'; }}

@@ -27,24 +27,6 @@ const createBoard = async (req, res) => {
     await newBoard.save();
     const board = await populateBoard(Board.findById(newBoard._id));
 
-    // If a valid template key is provided, create the template tasks
-    if (template && BOARD_TEMPLATES[template]) {
-      const templateDef = BOARD_TEMPLATES[template];
-      const today = new Date();
-      const taskDocs = templateDef.tasks.map((t, i) => ({
-        title: t.title,
-        description: t.description || '',
-        status: 'todo',
-        priority: t.priority || 'medium',
-        assignee: null,
-        dueDate: null,
-        progress: 0,
-        board: newBoard._id,
-        createdBy: req.userId,
-        labels: t.labels || []
-      }));
-      await Task.insertMany(taskDocs);
-    }
 
     res.status(201).json({ message: 'Board created successfully', board });
 
