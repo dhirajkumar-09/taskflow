@@ -301,7 +301,9 @@ const deleteTask = async (req, res) => {
     await task.deleteOne();
 
     const io = req.app.get('io');
-    io.to(boardId).emit('taskDeleted', { taskId });
+    if (io) {
+      io.to(boardId).emit('taskDeleted', { taskId });
+    }
 
     res.status(200).json({ message: 'Task deleted successfully' });
 

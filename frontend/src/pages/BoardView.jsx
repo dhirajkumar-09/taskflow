@@ -110,7 +110,7 @@ function TaskCard({ task, onDelete, onOpen, canDelete, onToggleComplete }) {
               e.stopPropagation();
               onDelete(task._id);
             }}
-            className="opacity-0 group-hover:opacity-100 transition shrink-0"
+            className="opacity-70 hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0 p-1 rounded hover:bg-red-500/10"
             style={{ color: 'var(--danger)' }}
             title="Delete task"
           >
@@ -344,7 +344,9 @@ function BoardView() {
   }, [id]);
 
   const members = board?.members || [];
-  const isOwner = board && board.owner && board.owner._id === currentUser.id;
+  const currentUserId = currentUser?.id || currentUser?._id;
+  const ownerId = board?.owner?._id || board?.owner;
+  const isOwner = Boolean(ownerId && currentUserId && ownerId.toString() === currentUserId.toString());
 
   const people = useMemo(
     () => members.map((m) => ({ ...m, isOwner: board?.owner && m._id === board.owner._id })),
@@ -409,9 +411,14 @@ function BoardView() {
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await authFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+      const res = await authFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        fetchTasks();
+      }
     } catch (err) {
       console.error(err);
+      fetchTasks();
     }
   };
 
@@ -665,7 +672,7 @@ function BoardView() {
             tasks={tasks}
             onInvite={() => setInviteOpen(true)}
             isOwner={isOwner}
-            currentUserId={currentUser.id}
+            currentUserId={currentUserId}
             onRemove={handleRemoveMember}
           />
         )}
@@ -769,7 +776,7 @@ function BoardView() {
           onSave={handleUpdateTask}
           onDelete={handleDeleteTask}
           isLeader={isOwner}
-          currentUserId={currentUser.id}
+          currentUserId={currentUserId}
         />
       )}
     </div>

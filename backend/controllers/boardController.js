@@ -239,10 +239,14 @@ const deleteBoard = async (req, res) => {
 
     const boardId = board._id.toString();
 
+    // Delete all tasks associated with this board
+    await Task.deleteMany({ board: board._id });
     await board.deleteOne();
 
     const io = req.app.get('io');
-    io.to(boardId).emit('boardDeleted', { boardId });
+    if (io) {
+      io.to(boardId).emit('boardDeleted', { boardId });
+    }
 
     res.status(200).json({ message: 'Board deleted successfully' });
 

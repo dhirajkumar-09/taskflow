@@ -99,6 +99,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserId = user?.id || user?._id;
 
   const fetchBoards = async () => {
     try {
@@ -189,13 +190,15 @@ function Dashboard() {
   const handleDeleteBoard = async (boardId) => {
     if (!window.confirm('Delete this board and all its tasks?')) return;
     try {
+      setBoards((prev) => prev.filter((b) => b._id !== boardId));
+      setOpenMenuId(null);
       const res = await authFetch(`/api/boards/${boardId}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete board');
-      setOpenMenuId(null);
       fetchBoards();
       fetchStats();
     } catch (err) {
+      fetchBoards();
       if (err.message !== 'Session expired') setError(err.message || 'Failed to delete board');
     }
   };
@@ -518,7 +521,7 @@ function Dashboard() {
                         Created {new Date(board.createdAt).toLocaleDateString()}
                         {board.owner && (
                           <> · Leader: <span style={{ color: 'var(--text)' }}>
-                            {board.owner._id === user.id ? 'You' : board.owner.name}
+                            {(board.owner._id === currentUserId || board.owner === currentUserId) ? 'You' : board.owner.name}
                           </span></>
                         )}
                       </p>
@@ -535,7 +538,7 @@ function Dashboard() {
                       </svg>
                     </button>
 
-                    {board.owner && board.owner._id === user.id && (
+                    {Boolean(board.owner && (board.owner._id === currentUserId || board.owner === currentUserId)) && (
                     <div className="relative z-20" data-board-menu>
                       <button
                         onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === board._id ? null : board._id); }}
